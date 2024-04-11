@@ -2,4 +2,4 @@
 
 Hold tight! This demo will soon be ready.
 
-Can't wait? [contact us](support@sency.ai) and let us know.
+Can't wait? [contact us](mailto:support@sency.ai) and let us know.
