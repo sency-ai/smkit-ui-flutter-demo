@@ -1,0 +1,119 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.smkit_ui_flutter_plugin_example"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="23"
+9        android:targetSdkVersion="33" />
+10    <!--
+11         The INTERNET permission is required for development. Specifically,
+12         the Flutter tool needs it to communicate with the running application
+13         to allow setting breakpoints, to provide hot reload, etc.
+14    -->
+15    <uses-permission android:name="android.permission.INTERNET" />
+15-->/Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/src/debug/AndroidManifest.xml:6:5-66
+15-->/Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/src/debug/AndroidManifest.xml:6:22-64
+16    <!--
+17     Required to query activities that can process text, see:
+18         https://developer.android.com/training/package-visibility?hl=en and
+19         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+20
+21         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin.
+22    -->
+23    <queries>
+23-->/Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/src/main/AndroidManifest.xml:38:5-43:15
+24        <intent>
+24-->/Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/src/main/AndroidManifest.xml:39:9-42:18
+25            <action android:name="android.intent.action.PROCESS_TEXT" />
+25-->/Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/src/main/AndroidManifest.xml:40:13-72
+25-->/Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/src/main/AndroidManifest.xml:40:21-70
+26
+27            <data android:mimeType="text/plain" />
+27-->/Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/src/main/AndroidManifest.xml:41:13-50
+27-->/Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/src/main/AndroidManifest.xml:41:19-48
+28        </intent>
+29    </queries> <!-- For using the camera -->
+30    <uses-permission android:name="android.permission.CAMERA" />
+30-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:8:5-65
+30-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:8:22-62
+31
+32    <uses-feature android:name="android.hardware.camera" />
+32-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:10:5-60
+32-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:10:19-57
+33    <uses-feature android:name="android.hardware.camera.autofocus" /> <!-- For MediaPipe -->
+33-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:11:5-70
+33-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:11:19-67
+34    <uses-feature
+34-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:13:5-15:35
+35        android:glEsVersion="0x00020000"
+35-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:14:9-41
+36        android:required="true" />
+36-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:15:9-32
+37
+38    <application
+39        android:name="android.app.Application"
+40        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+40-->[androidx.core:core:1.6.0] /Users/danielcaspit/.gradle/caches/transforms-3/2579a7de00054bf46a8dbc332552f622/transformed/core-1.6.0/AndroidManifest.xml:24:18-86
+41        android:debuggable="true"
+42        android:extractNativeLibs="false"
+43        android:icon="@mipmap/ic_launcher"
+44        android:label="smkit_ui_flutter_plugin_example" >
+45        <activity
+46            android:name="com.example.smkit_ui_flutter_plugin_example.MainActivity"
+47            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+48            android:exported="true"
+49            android:hardwareAccelerated="true"
+50            android:launchMode="singleTop"
+51            android:theme="@style/LaunchTheme"
+52            android:windowSoftInputMode="adjustResize" >
+53
+54            <!--
+55                 Specifies an Android theme to apply to this Activity as soon as
+56                 the Android process has started. This theme is visible to the user
+57                 while the Flutter UI initializes. After that, this theme continues
+58                 to determine the Window background behind the Flutter UI.
+59            -->
+60            <meta-data
+61                android:name="io.flutter.embedding.android.NormalTheme"
+62                android:resource="@style/NormalTheme" />
+63
+64            <intent-filter>
+65                <action android:name="android.intent.action.MAIN" />
+66
+67                <category android:name="android.intent.category.LAUNCHER" />
+68            </intent-filter>
+69        </activity>
+70        <!--
+71             Don't delete the meta-data below.
+72             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java
+73        -->
+74        <meta-data
+75            android:name="flutterEmbedding"
+76            android:value="2" />
+77
+78        <activity
+78-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:18:9-21:57
+79            android:name="com.sency.smkitui.presentation.SMKitUIActivity"
+79-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:19:13-74
+80            android:launchMode="singleTop"
+80-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:20:13-43
+81            android:theme="@style/SMKitUIVisualTheme" />
+81-->[smkitui-debug.aar] /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/AndroidManifest.xml:21:13-54
+82
+83        <uses-library
+83-->[androidx.window:window:1.0.0-beta04] /Users/danielcaspit/.gradle/caches/transforms-3/032f4dff274e516110d9363a9793a3e3/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:25:9-27:40
+84            android:name="androidx.window.extensions"
+84-->[androidx.window:window:1.0.0-beta04] /Users/danielcaspit/.gradle/caches/transforms-3/032f4dff274e516110d9363a9793a3e3/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:26:13-54
+85            android:required="false" />
+85-->[androidx.window:window:1.0.0-beta04] /Users/danielcaspit/.gradle/caches/transforms-3/032f4dff274e516110d9363a9793a3e3/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:27:13-37
+86        <uses-library
+86-->[androidx.window:window:1.0.0-beta04] /Users/danielcaspit/.gradle/caches/transforms-3/032f4dff274e516110d9363a9793a3e3/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:28:9-30:40
+87            android:name="androidx.window.sidecar"
+87-->[androidx.window:window:1.0.0-beta04] /Users/danielcaspit/.gradle/caches/transforms-3/032f4dff274e516110d9363a9793a3e3/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:29:13-51
+88            android:required="false" />
+88-->[androidx.window:window:1.0.0-beta04] /Users/danielcaspit/.gradle/caches/transforms-3/032f4dff274e516110d9363a9793a3e3/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:30:13-37
+89    </application>
+90
+91</manifest>

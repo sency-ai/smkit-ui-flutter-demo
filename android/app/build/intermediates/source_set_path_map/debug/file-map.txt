@@ -1,0 +1,15 @@
+com.example.smkit_ui_flutter_plugin_example.app-jetified-window-1.0.0-beta04-0 /Users/danielcaspit/.gradle/caches/transforms-3/032f4dff274e516110d9363a9793a3e3/transformed/jetified-window-1.0.0-beta04/res
+com.example.smkit_ui_flutter_plugin_example.app-jetified-window-java-1.0.0-beta04-1 /Users/danielcaspit/.gradle/caches/transforms-3/142c24f2530665bb6deb4123ab140714/transformed/jetified-window-java-1.0.0-beta04/res
+com.example.smkit_ui_flutter_plugin_example.app-core-1.6.0-2 /Users/danielcaspit/.gradle/caches/transforms-3/2579a7de00054bf46a8dbc332552f622/transformed/core-1.6.0/res
+com.example.smkit_ui_flutter_plugin_example.app-jetified-annotation-experimental-1.1.0-3 /Users/danielcaspit/.gradle/caches/transforms-3/3f96ca76068ab400b494bc7d541ee256/transformed/jetified-annotation-experimental-1.1.0/res
+com.example.smkit_ui_flutter_plugin_example.app-jetified-smkitui-debug-4 /Users/danielcaspit/.gradle/caches/transforms-3/bb72634cb2365ab8061fcbbbb2db03ae/transformed/jetified-smkitui-debug/res
+com.example.smkit_ui_flutter_plugin_example.app-packaged_res-5 /Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/android/build/intermediates/packaged_res/debug
+com.example.smkit_ui_flutter_plugin_example.app-pngs-6 /Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/build/generated/res/pngs/debug
+com.example.smkit_ui_flutter_plugin_example.app-resValues-7 /Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/build/generated/res/resValues/debug
+com.example.smkit_ui_flutter_plugin_example.app-rs-8 /Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/build/generated/res/rs/debug
+com.example.smkit_ui_flutter_plugin_example.app-mergeDebugResources-9 /Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/build/intermediates/incremental/debug/mergeDebugResources/merged.dir
+com.example.smkit_ui_flutter_plugin_example.app-mergeDebugResources-10 /Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/build/intermediates/incremental/debug/mergeDebugResources/stripped.dir
+com.example.smkit_ui_flutter_plugin_example.app-merged_res-11 /Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/build/intermediates/merged_res/debug
+com.example.smkit_ui_flutter_plugin_example.app-debug-12 /Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/src/debug/res
+com.example.smkit_ui_flutter_plugin_example.app-main-13 /Users/danielcaspit/Desktop/flutter-projects/smkit_ui_bridge_lib/smkit_ui_flutter_plugin/example/android/app/src/main/res
+com.example.smkit_ui_flutter_plugin_example.app-packaged_res-14 /Users/danielcaspit/flutter/flutter/packages/integration_test/android/build/intermediates/packaged_res/debug
