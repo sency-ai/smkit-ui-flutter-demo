@@ -195,10 +195,10 @@ packages:
     dependency: "direct main"
     description:
       name: smkit_ui_flutter_plugin
-      sha256: cfe8431573149e3430d2eb5fc605ebe8e6a051141d8286fa7b2a446e86cac193
+      sha256: "282ece1ef3901b78cc24b1bafb944ca13d389f2f14eebdf5b7715694ccc82d37"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.2"
+    version: "0.1.0"
   source_span:
     dependency: transitive
     description:
