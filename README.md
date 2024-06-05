@@ -24,8 +24,8 @@ final _smkitUiFlutterPlugin = SmkitUiFlutterPlugin();
 _smkitUiFlutterPlugin.configure(key: "YOUR_AUTH_KEY")
 ```
 
-Also in `initState()` of your App we need to make sure the Platform messages are asynchronous,
-so we initialize in an async method.
+Also when `initState()` is being initialized please call this function in order to make sure the Platform messages are asynchronous.
+We can achive that by initialize the state in an async method.
 
 ```dart
  Future<void> initPlatformState() async {
@@ -38,30 +38,39 @@ so we initialize in an async method.
   }
 ```
 ### Android
-In order to be compatible with SMKitUI the Android project should make some changes.
+In order to be compatible with SMKitUI, the Android project should make some changes.
+
 At `gradle-wrapper.properties` please change gradle version to be 8^.
 
 ```groovy
-    distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-bin.zip
+  distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-bin.zip
 ```
 
 Under `gradle.properties` on project level add the following: 
 
 ```groovy
-    SMKitUI_Version = 0.1.1
-    artifactory_contentUrl=https://artifacts.sency.ai/artifactory/release
+  SMKitUI_Version = 0.1.1
+  artifactory_contentUrl=https://artifacts.sency.ai/artifactory/release
 ```
 
-And please make sure your `kotlin_version` is the 1.9^
+And please make sure your kotlin_version is at least 1.9
+```groovy
+  buildscript {
+    ext.kotlin_version = '1.9.24'
+  }
+```
 
 ## API
 ### Start Assessment
-Start the Assessment screen. In the parameters method `startAssessment()` You can add `SencyHandlerStatus` to track the success of the method. you need to process the result that the methods return in the callback.
+Start the Assessment screen. In the parameters method `startAssessment()` You can add `SencyHandlerStatus` to track the success of the method. 
+You need to process the result that the methods return in the callback.
+
 Please make sure you call `startAssessment()` only after configuring the plugin with your "AUTH_KEY".
 ```dart
-    onPressed: () {
-        _smkitUiFlutterPlugin.startAssessment();
-    }
+  // Under Button Widget of sort
+  onPressed: () {
+      _smkitUiFlutterPlugin.startAssessment();
+  }
 ```
 
 ### Start Custom Workout
@@ -112,7 +121,7 @@ SMWorkout getDemoWorkout() {
     );
 }
 
-// Inside a widget 
+// Under Button widget of sort 
 onPressed: () {
     _smkitUiFlutterPlugin.startCustomWorkout(
         workout: getDemoWorkout(),
