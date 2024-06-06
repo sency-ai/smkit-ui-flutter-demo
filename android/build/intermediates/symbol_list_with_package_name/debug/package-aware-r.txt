@@ -1,1 +1,0 @@
-com.example.smkit_ui_flutter_plugin_example
