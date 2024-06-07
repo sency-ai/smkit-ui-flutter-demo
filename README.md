@@ -4,7 +4,7 @@
 * [Initialization](#initialization)
 * [Android](#Android)
 
-### [API](#usage)
+### [API](#api)
 * [Start Assessment](#start-assessment)
 * [Start Custom Workout](#start-custom-workout)
 
@@ -69,12 +69,42 @@ Please make sure you call `startAssessment()` only after configuring the plugin 
 ```dart
   // Under Button Widget of sort
   onPressed: () {
-      _smkitUiFlutterPlugin.startAssessment();
+    _smkitUiFlutterPlugin.startAssessment(
+      onHandle: (status) {
+        debugPrint('_startAssessment status: ${status.operation} ${status.data}');
+        if (status.operation != SencyOperation.workoutSummaryData && status.data == null) return;
+
+        final workoutResult = status.data;
+        debugPrint('_startAssessment workoutResult: $workoutResult');
+        
+        if (workoutResult == null || workoutResult.isEmpty) return;
+        // Handle the Result
+      },
+    );
   }
 ```
 
+`SencyHandlerStatus` object is a representative for the comminucation between Platform-to-Dart inside Sency's flutter plugin.
+The comminucation is being done by json serialize and desirialize by EventSink native flutter object.
+He is a sneek peek to `SencyHandlerStatus` object: 
+
+```dart
+  enum SencyOperation {
+    error,
+    workoutSummaryData,
+    exerciseData;
+  }
+
+  class SencyHandlerStatus {
+    final SencyOperation operation;
+    final String? data;
+  }
+```
+
+Please address the code for further reading
+
 ### Start Custom Workout
-Start the workout screen with custom workout. In the parameters method `startCustomWorkout()` add the `SencyHandlerStatus` listener. To track the success of a method or get the expected
+Start the workout screen with custom workout. In the parameters method `startCustomWorkout()` add the `SencyHandlerStatus` listener as explained above. To track the success of the method or get the expected
 data, you need to process the result that the methods return to the callback.
 ```dart
 SMWorkout getDemoWorkout() {
@@ -123,8 +153,19 @@ SMWorkout getDemoWorkout() {
 
 // Under Button widget of sort 
 onPressed: () {
-    _smkitUiFlutterPlugin.startCustomWorkout(
-        workout: getDemoWorkout(),
-    );
+  _smkitUiFlutterPlugin.startCustomWorkout(
+    workout: getDemoWorkout(
+      onHandle: (status) {
+        debugPrint('startCustomWorkout status: ${status.operation} ${status.data}');
+        if (status.operation != SencyOperation.workoutSummaryData && status.data == null) return;
+
+        final workoutResult = status.data;
+        debugPrint('startCustomWorkout workoutResult: $workoutResult');
+        
+        if (workoutResult == null || workoutResult.isEmpty) return;
+        // Handle the Result
+      },
+    ),
+  );
 }
 ```

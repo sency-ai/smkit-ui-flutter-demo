@@ -42,42 +42,47 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Center(
-            child: Column(
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ElevatedButton(
               onPressed: () async {
-                await _smkitUiFlutterPlugin
-                    .configure(key: apiPublicKey)
-                    .then((result) => {
-                          setState(() {
-                            isConfigured = result == true;
-                          })
-                        });
+                await _smkitUiFlutterPlugin.configure(key: apiPublicKey).then(
+                      (result) => {
+                        setState(() {
+                          isConfigured = result == true;
+                        })
+                      },
+                    );
               },
               child: const Text('Configure'),
             ),
-            isConfigured
-                ? ElevatedButton(
-                    onPressed: () {
-                      _smkitUiFlutterPlugin.startAssessment();
-                    },
-                    child: const Text('start Assesment'),
-                  )
-                : const SizedBox(),
-            isConfigured
-                ? ElevatedButton(
-                    onPressed: () {
-                      _smkitUiFlutterPlugin.startCustomWorkout(
-                        workout: getDemoWorkout(),
-                      );
-                    },
-                    child: const Text('start Custom Workout'),
-                  )
-                : const SizedBox(),
+            isConfigured ? showHiddenButtons() : const SizedBox(),
           ],
-        )),
+        ),
       ),
+    );
+  }
+
+  Column showHiddenButtons() {
+    return Column(
+      children: [
+        ElevatedButton(
+          onPressed: () {
+            _smkitUiFlutterPlugin.startAssessment();
+          },
+          child: const Text('start Assesment'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            _smkitUiFlutterPlugin.startCustomWorkout(
+              workout: getDemoWorkout(),
+            );
+          },
+          child: const Text('start Custom Workout'),
+        )
+      ],
     );
   }
 
