@@ -155,19 +155,18 @@ SMWorkout getDemoWorkout() {
 // Under Button widget of sort 
 onPressed: () {
   _smkitUiFlutterPlugin.startCustomWorkout(
-    workout: getDemoWorkout(
-      onHandle: (status) {
-        debugPrint('startCustomWorkout status: ${status.operation} ${status.data}');
-        // status.operation => workoutSummrayData, exerciseData or error
-        if (status.data == null) return;
+    workout: getDemoWorkout(),
+    onHandle: (status) {
+      debugPrint('startCustomWorkout status: ${status.operation} ${status.data}');
+      // status.operation => workoutSummrayData, exerciseData or error
+      if (status.data == null) return;
 
-        final workoutResult = status.data;
-        debugPrint('startCustomWorkout workoutResult: $workoutResult');
-        
-        if (workoutResult == null || workoutResult.isEmpty) return;
-        // Handle the Result
-      },
-    ),
+      final workoutResult = status.data;
+      debugPrint('startCustomWorkout workoutResult: $workoutResult');
+      
+      if (workoutResult == null || workoutResult.isEmpty) return;
+      // Handle the Result
+    },
   );
 }
 ```
