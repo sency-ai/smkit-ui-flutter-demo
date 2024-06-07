@@ -50,7 +50,7 @@ Under `gradle.properties` on project level add the following:
 
 ```groovy
   SMKitUI_Version = 0.1.1
-  artifactory_contentUrl=https://artifacts.sency.ai/artifactory/release
+  artifactory_contentUrl = 'https://artifacts.sency.ai/artifactory/release'
 ```
 
 And please make sure your kotlin_version is at least 1.9
@@ -85,8 +85,8 @@ Please make sure you call `startAssessment()` only after configuring the plugin 
 ```
 
 `SencyHandlerStatus` object is a representative for the comminucation between Platform-to-Dart inside Sency's flutter plugin.
-The comminucation is being done by json serialize and desirialize by EventSink native flutter object.
-He is a sneek peek to `SencyHandlerStatus` object: 
+The comminucation is being done by json serialize and deserialize by EventSink native flutter object.
+Here is a sneek peek to `SencyHandlerStatus` object: 
 
 ```dart
   enum SencyOperation {
