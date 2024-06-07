@@ -72,7 +72,8 @@ Please make sure you call `startAssessment()` only after configuring the plugin 
     _smkitUiFlutterPlugin.startAssessment(
       onHandle: (status) {
         debugPrint('_startAssessment status: ${status.operation} ${status.data}');
-        if (status.operation != SencyOperation.workoutSummaryData && status.data == null) return;
+        // status.operation => workoutSummrayData, exerciseData or error
+        if (status.data == null) return;
 
         final workoutResult = status.data;
         debugPrint('_startAssessment workoutResult: $workoutResult');
@@ -157,7 +158,8 @@ onPressed: () {
     workout: getDemoWorkout(
       onHandle: (status) {
         debugPrint('startCustomWorkout status: ${status.operation} ${status.data}');
-        if (status.operation != SencyOperation.workoutSummaryData && status.data == null) return;
+        // status.operation => workoutSummrayData, exerciseData or error
+        if (status.data == null) return;
 
         final workoutResult = status.data;
         debugPrint('startCustomWorkout workoutResult: $workoutResult');
