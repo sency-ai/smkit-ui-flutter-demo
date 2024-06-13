@@ -3,6 +3,7 @@
 ### [Usage](#usage)
 * [Initialization](#initialization)
 * [Android](#Android)
+* [iOS](#iOS)
 
 ### [API](#api)
 * [Start Assessment](#start-assessment)
@@ -12,13 +13,13 @@
 To use SMKitUI in your project, add these dependencies to your application in your `pubspec.yaml` file.
 ```yaml
 dependencies:
-  smkit_ui_flutter_plugin: ^0.1.0
+flutter_smkit_ui: ^0.1.0
 ```
 
 ### Initialization
 To initialize SMKitUI in your App, You need to use the dedicated flutter plugin 
 ```dart
-import 'package:smkit_ui_flutter_plugin/smkit_ui_flutter_plugin.dart';
+import 'package:flutter_smkit_ui/flutter_smkit_ui_plugin.dart';
 
 final _smkitUiFlutterPlugin = SmkitUiFlutterPlugin();
 _smkitUiFlutterPlugin.configure(key: "YOUR_AUTH_KEY")
