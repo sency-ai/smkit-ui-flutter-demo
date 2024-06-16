@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:smkit_ui_flutter_plugin/models/sm_workout.dart';
-import 'package:smkit_ui_flutter_plugin/smkit_ui_flutter_plugin.dart';
+import 'package:flutter_smkit_ui/models/sm_workout.dart';
+import 'package:flutter_smkit_ui/models/smkit_ui_handlers.dart';
+import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 
 void main() {
   runApp(const MyApp());
@@ -42,7 +43,8 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Column(
+        body: Center(
+        child:Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -62,6 +64,7 @@ class _MyAppState extends State<MyApp> {
           ],
         ),
       ),
+    )
     );
   }
 
@@ -70,8 +73,23 @@ class _MyAppState extends State<MyApp> {
       children: [
         ElevatedButton(
           onPressed: () {
-            _smkitUiFlutterPlugin.startAssessment();
-          },
+            _smkitUiFlutterPlugin.startAssessment(
+              type: AssessmentTypes.fitness,
+              onHandle: (status) {
+                debugPrint(
+                    '_startWorkout status: ${status.operation} ${status.data}');
+                if (status.operation == SMKitOperation.exerciseData &&
+                    status.data != null) {
+                  final workoutResult = status.data;
+                  debugPrint(
+                      '_startWorkout workoutResult: $workoutResult');
+                  if (workoutResult == null) {
+                    return;
+                  }
+                }
+              },
+            );
+            },
           child: const Text('start Assesment'),
         ),
         ElevatedButton(
@@ -86,15 +104,15 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  SMWorkout getDemoWorkout() {
-    List<SMExercise> exercises = [
-      SMExercise(
+  SMKitWorkout getDemoWorkout() {
+    List<SMKitExercise> exercises = [
+      SMKitExercise(
         name: "First Exercise",
         totalSeconds: 35,
         introSeconds: 5,
         videoInstruction: null,
         exerciseIntro: null,
-        uiElements: [UIElement.RepsCounter, UIElement.GaugeOfMotion],
+        uiElements: [SMKitUIElement.RepsCounter, SMKitUIElement.GaugeOfMotion],
         detector: "HighKnees",
         repBased: true,
         exerciseClosure: null,
@@ -102,13 +120,13 @@ class _MyAppState extends State<MyApp> {
         targetTime: 20,
         scoreFactor: 0.3,
       ),
-      SMExercise(
+      SMKitExercise(
         name: "Second Exercise",
         totalSeconds: 25,
         introSeconds: 5,
         videoInstruction: null,
         exerciseIntro: null,
-        uiElements: [UIElement.GaugeOfMotion, UIElement.Timer],
+        uiElements: [SMKitUIElement.GaugeOfMotion, SMKitUIElement.Timer],
         detector: "SquatRegularOverheadStatic",
         repBased: false,
         exerciseClosure: null,
@@ -118,7 +136,7 @@ class _MyAppState extends State<MyApp> {
       ),
     ];
 
-    return SMWorkout(
+    return SMKitWorkout(
       id: "50",
       name: "demo workout",
       workoutIntro: null,
