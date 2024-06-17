@@ -178,8 +178,8 @@ code_sign_if_enabled() {
 if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftyJSON/SwiftyJSON.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ZIPFoundation/ZIPFoundation.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/flutter_smkit_ui/flutter_smkit_ui.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/integration_test/integration_test.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/smkit_ui_flutter_plugin/smkit_ui_flutter_plugin.framework"
   install_framework "${PODS_XCFRAMEWORKS_BUILD_DIR}/SMBase/SMBase.framework"
   install_framework "${PODS_XCFRAMEWORKS_BUILD_DIR}/SMBaseUI/SMBaseUI.framework"
   install_framework "${PODS_XCFRAMEWORKS_BUILD_DIR}/SMKit/SMKit.framework"
@@ -188,8 +188,8 @@ fi
 if [[ "$CONFIGURATION" == "Profile" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftyJSON/SwiftyJSON.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ZIPFoundation/ZIPFoundation.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/flutter_smkit_ui/flutter_smkit_ui.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/integration_test/integration_test.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/smkit_ui_flutter_plugin/smkit_ui_flutter_plugin.framework"
   install_framework "${PODS_XCFRAMEWORKS_BUILD_DIR}/SMBase/SMBase.framework"
   install_framework "${PODS_XCFRAMEWORKS_BUILD_DIR}/SMBaseUI/SMBaseUI.framework"
   install_framework "${PODS_XCFRAMEWORKS_BUILD_DIR}/SMKit/SMKit.framework"
@@ -198,8 +198,8 @@ fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftyJSON/SwiftyJSON.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ZIPFoundation/ZIPFoundation.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/flutter_smkit_ui/flutter_smkit_ui.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/integration_test/integration_test.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/smkit_ui_flutter_plugin/smkit_ui_flutter_plugin.framework"
   install_framework "${PODS_XCFRAMEWORKS_BUILD_DIR}/SMBase/SMBase.framework"
   install_framework "${PODS_XCFRAMEWORKS_BUILD_DIR}/SMBaseUI/SMBaseUI.framework"
   install_framework "${PODS_XCFRAMEWORKS_BUILD_DIR}/SMKit/SMKit.framework"
