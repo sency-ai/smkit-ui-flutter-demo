@@ -39,12 +39,12 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
-        body: Center(
-        child:Column(
+        home: Scaffold(
+      appBar: AppBar(
+        title: const Text('Plugin example app'),
+      ),
+      body: Center(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -64,8 +64,7 @@ class _MyAppState extends State<MyApp> {
           ],
         ),
       ),
-    )
-    );
+    ));
   }
 
   Column showHiddenButtons() {
@@ -81,15 +80,14 @@ class _MyAppState extends State<MyApp> {
                 if (status.operation == SMKitOperation.exerciseData &&
                     status.data != null) {
                   final workoutResult = status.data;
-                  debugPrint(
-                      '_startWorkout workoutResult: $workoutResult');
+                  debugPrint('_startWorkout workoutResult: $workoutResult');
                   if (workoutResult == null) {
                     return;
                   }
                 }
               },
             );
-            },
+          },
           child: const Text('start Assesment'),
         ),
         ElevatedButton(
@@ -107,7 +105,7 @@ class _MyAppState extends State<MyApp> {
   SMKitWorkout getDemoWorkout() {
     List<SMKitExercise> exercises = [
       SMKitExercise(
-        name: "First Exercise",
+        prettyName: "First Exercise",
         totalSeconds: 35,
         introSeconds: 5,
         videoInstruction: null,
@@ -121,7 +119,7 @@ class _MyAppState extends State<MyApp> {
         scoreFactor: 0.3,
       ),
       SMKitExercise(
-        name: "Second Exercise",
+        prettyName: "Second Exercise",
         totalSeconds: 25,
         introSeconds: 5,
         videoInstruction: null,
