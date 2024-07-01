@@ -137,7 +137,7 @@ First, go to your Podfile located at ios/Podfile and add the following at the to
 
 ``` Ruby
 source 'https://github.com/CocoaPods/Specs.git'
-source 'https://bitbucket.org/sency-ios/sency_ios_sdk.git'
+source 'https://bitbucket.org/sencyai/ios_sdks_release.git'
 ```
 
 Next, add these install hooks at the end of the file:
