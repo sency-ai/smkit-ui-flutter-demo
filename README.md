@@ -19,6 +19,7 @@ flutter_smkit_ui: ^0.1.3
 * [Android](https://github.com/sency-ai/smkit-ui-flutter-demo/blob/main/docs/android-setup.md)
 * [iOS](https://github.com/sency-ai/smkit-ui-flutter-demo/blob/main/docs/ios-setup.md)
 
+
 ### Initialization
 To initialize SMKitUI in your App, You need to use the dedicated flutter plugin 
 ```dart
