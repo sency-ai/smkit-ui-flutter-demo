@@ -13,7 +13,7 @@
 To use SMKitUI in your project, add these dependencies to your application in your `pubspec.yaml` file.
 ```yaml
 dependencies:
-flutter_smkit_ui: ^0.1.2
+flutter_smkit_ui: ^0.1.3
 ```
 
 ### Initialization
@@ -50,7 +50,7 @@ At `gradle-wrapper.properties` please change gradle version to be 8^.
 Under `gradle.properties` on project level add the following: 
 
 ```groovy
-  SMKitUI_Version = 0.1.2
+  SMKitUI_Version = 0.1.3
   artifactory_contentUrl = https://artifacts.sency.ai/artifactory/release
 ```
 
