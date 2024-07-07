@@ -1,4 +1,4 @@
-# iOS setup
+# iOS Setup
 
 To ensure the SDK works for iOS, please follow these steps:
 
