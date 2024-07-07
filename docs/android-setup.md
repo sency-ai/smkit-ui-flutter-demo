@@ -1,4 +1,4 @@
-# Setup Android
+# Android Setup
 
 In order to be compatible with SMKitUI, the Android project should make some changes.
 
