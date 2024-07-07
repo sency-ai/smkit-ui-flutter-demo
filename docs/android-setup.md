@@ -11,7 +11,7 @@ At `gradle-wrapper.properties` please change gradle version to be 8^.
 Under `gradle.properties` on project level add the following: 
 
 ```groovy
-  SMKitUI_Version = 0.1.3
+  SMKitUI_Version = 0.1.4
   artifactory_contentUrl = https://artifacts.sency.ai/artifactory/release
 ```
 
