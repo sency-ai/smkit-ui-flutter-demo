@@ -33,7 +33,13 @@ class _MyAppState extends State<MyApp> {
     // setState to update our non-existent appearance.
     if (!mounted) return;
 
-    setState(() {});
+    _smkitUiFlutterPlugin.configure(key: apiPublicKey).then(
+          (result) => {
+            setState(() {
+              isConfigured = result == true;
+            })
+          },
+        );
   }
 
   @override
@@ -48,19 +54,9 @@ class _MyAppState extends State<MyApp> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: () async {
-                await _smkitUiFlutterPlugin.configure(key: apiPublicKey).then(
-                      (result) => {
-                        setState(() {
-                          isConfigured = result == true;
-                        })
-                      },
-                    );
-              },
-              child: const Text('Configure'),
-            ),
-            isConfigured ? showHiddenButtons() : const SizedBox(),
+            isConfigured
+                ? showHiddenButtons()
+                : const Text("Loading Configure"),
           ],
         ),
       ),
@@ -94,6 +90,18 @@ class _MyAppState extends State<MyApp> {
           onPressed: () {
             _smkitUiFlutterPlugin.startCustomWorkout(
               workout: getDemoWorkout(),
+              onHandle: (status) {
+                debugPrint(
+                    '_startWorkout status: ${status.operation} ${status.data}');
+                if (status.operation == SMKitOperation.exerciseData &&
+                    status.data != null) {
+                  final workoutResult = status.data;
+                  debugPrint('_startWorkout workoutResult: $workoutResult');
+                  if (workoutResult == null) {
+                    return;
+                  }
+                }
+              },
             );
           },
           child: const Text('start Custom Workout'),
