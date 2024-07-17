@@ -1,19 +1,19 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_smkit_ui (0.1.0):
+  - flutter_smkit_ui (0.1.3):
     - Flutter
-    - SMKitUI (= 0.1.7)
+    - SMKitUI (= 0.1.9)
   - integration_test (0.0.1):
     - Flutter
-  - SMBase (0.5.0):
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - SMBase (0.5.2):
     - SwiftyJSON
-  - SMBaseUI (0.2.2):
-    - SMBase (= 0.5.0)
-  - SMKit (0.1.7):
-    - SMBase (= 0.5.0)
-  - SMKitUI (0.1.7):
-    - SMBaseUI (= 0.2.2)
-    - SMKit (= 0.1.7)
+  - SMKit (0.1.9):
+    - SMBase (= 0.5.2)
+  - SMKitUI (0.1.9):
+    - SMKit (= 0.1.9)
     - ZIPFoundation
   - SwiftyJSON (5.0.2)
   - ZIPFoundation (0.9.19)
@@ -22,11 +22,11 @@ DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_smkit_ui (from `.symlinks/plugins/flutter_smkit_ui/ios`)
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
 
 SPEC REPOS:
-  https://bitbucket.org/sency-ios/sency_ios_sdk.git:
+  https://bitbucket.org/sencyai/ios_sdks_release.git:
     - SMBase
-    - SMBaseUI
     - SMKit
     - SMKitUI
   https://github.com/CocoaPods/Specs.git:
@@ -40,18 +40,20 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_smkit_ui/ios"
   integration_test:
     :path: ".symlinks/plugins/integration_test/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
 
 SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  flutter_smkit_ui: 91bf9659097540e3108001950dac5f6527468910
+  flutter_smkit_ui: 275fcbfe39d4b28907cc493c1f6840999a27c7ca
   integration_test: ce0a3ffa1de96d1a89ca0ac26fca7ea18a749ef4
-  SMBase: 55f338460b566c7aeced2fb45d07864f70731952
-  SMBaseUI: f467dcfda9ebf6a467e4c8c4cdb01fcd08b9ccb5
-  SMKit: 39af2bd577c4e82b876bb6ed3bc4426c20ee363d
-  SMKitUI: bc7c3021c84553b34530809bf2df492168f9157d
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  SMBase: bbacc3af52a06302cb9d04006d5b5e342096687a
+  SMKit: cd385ad3acdd8396f5029054bb0618225cca8564
+  SMKitUI: 2b578e6b43d0a3757fcdf196fbd970c884e47737
   SwiftyJSON: f5b1bf1cd8dd53cd25887ac0eabcfd92301c6a5a
   ZIPFoundation: b8c29ea7ae353b309bc810586181fd073cb3312c
 
-PODFILE CHECKSUM: b9ce3884f92a9cd4b866bcb9f19cb3eb56de4653
+PODFILE CHECKSUM: f80c9daf1df50991790ff28680345258587662b8
 
 COCOAPODS: 1.15.2
