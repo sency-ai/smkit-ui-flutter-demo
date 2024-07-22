@@ -73,7 +73,8 @@ class _MyAppState extends State<MyApp> {
         ElevatedButton(
           onPressed: () {
             _smkitUiFlutterPlugin.startAssessment(
-              type: AssessmentTypes.fitness,
+              type: AssessmentTypes.custom,
+              assessmentID: "YOUR_ASSESSMENT_ID, // If you dont have a assessmentID please use null
               onHandle: (status) {
                 debugPrint(
                     '_startWorkout status: ${status.operation} ${status.data}');
