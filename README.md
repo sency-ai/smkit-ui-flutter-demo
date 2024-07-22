@@ -52,7 +52,9 @@ Please make sure you call `startAssessment()` only after configuring the plugin 
 ```dart
   // Under Button Widget of sort
   onPressed: () {
-    _smkitUiFlutterPlugin.startAssessment(
+     _smkitUiFlutterPlugin.startAssessment(
+      type: AssessmentTypes.custom,
+      assessmentID: "YOUR_ASSESSMENT_ID, // If you dont have a assessmentID please use null
       onHandle: (status) {
         debugPrint('_startAssessment status: ${status.operation} ${status.data}');
         // status.operation => workoutSummrayData, exerciseData or error
