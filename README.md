@@ -105,7 +105,8 @@ Future<String> getFileUrl(String fileName) async {
 }
 
 Future<SMKitWorkout> getDemoWorkout() async{
-    var highKneesIntroURL =  await getFileUrl("HighKneesSound.mp3");
+    var introURL = await getFileUrl("customWorkoutIntro.mp3"); // local sound url
+    var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3"; // remoth sound url
 
     List<SMExercise> exercises = [
       SMExercise(
@@ -141,7 +142,7 @@ Future<SMKitWorkout> getDemoWorkout() async{
     return SMWorkout(
       id: "50", // => id: string | null
       name: "demo workout", // => name: string | null
-      workoutIntro: null, // => workoutIntro: string | null (url for a sound)
+      workoutIntro: introURL, // => workoutIntro: string | null (url for a sound)
       soundTrack: null, // => soundtrack: string | null (url for a sound)
       exercises: exercises, // => exercises: SMExercise[]
       getInFrame: null, // =>  getInFrame: string | null (url for a sound)
