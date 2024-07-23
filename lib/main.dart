@@ -129,8 +129,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<SMKitWorkout> getDemoWorkout() async{
-    var introURL = await getFileUrl("customWorkoutIntro.mp3");
-    var highKneesIntroURL =  await getFileUrl("HighKneesSound.mp3");
+    var introURL = await getFileUrl("customWorkoutIntro.mp3"); // local sound url
+    var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3"; // remoth sound url
 
     List<SMKitExercise> exercises = [
       SMKitExercise(
