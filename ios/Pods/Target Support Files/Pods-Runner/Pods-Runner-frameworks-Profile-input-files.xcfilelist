@@ -3,7 +3,7 @@ ${BUILT_PRODUCTS_DIR}/SwiftyJSON/SwiftyJSON.framework
 ${BUILT_PRODUCTS_DIR}/ZIPFoundation/ZIPFoundation.framework
 ${BUILT_PRODUCTS_DIR}/flutter_smkit_ui/flutter_smkit_ui.framework
 ${BUILT_PRODUCTS_DIR}/integration_test/integration_test.framework
+${BUILT_PRODUCTS_DIR}/path_provider_foundation/path_provider_foundation.framework
 ${PODS_XCFRAMEWORKS_BUILD_DIR}/SMBase/SMBase.framework/SMBase
-${PODS_XCFRAMEWORKS_BUILD_DIR}/SMBaseUI/SMBaseUI.framework/SMBaseUI
 ${PODS_XCFRAMEWORKS_BUILD_DIR}/SMKit/SMKit.framework/SMKit
 ${PODS_XCFRAMEWORKS_BUILD_DIR}/SMKitUI/SMKitUI.framework/SMKitUI

@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:flutter_smkit_ui/models/sm_workout.dart';
 import 'package:flutter_smkit_ui/models/smkit_ui_handlers.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -69,7 +73,8 @@ class _MyAppState extends State<MyApp> {
         ElevatedButton(
           onPressed: () {
             _smkitUiFlutterPlugin.startAssessment(
-              type: AssessmentTypes.fitness,
+              type: AssessmentTypes.custom,
+              assessmentID: "YOUR_ASSESSMENT_ID, // If you dont have a assessmentID please use null
               onHandle: (status) {
                 debugPrint(
                     '_startWorkout status: ${status.operation} ${status.data}');
@@ -88,21 +93,7 @@ class _MyAppState extends State<MyApp> {
         ),
         ElevatedButton(
           onPressed: () {
-            _smkitUiFlutterPlugin.startCustomWorkout(
-              workout: getDemoWorkout(),
-              onHandle: (status) {
-                debugPrint(
-                    '_startWorkout status: ${status.operation} ${status.data}');
-                if (status.operation == SMKitOperation.exerciseData &&
-                    status.data != null) {
-                  final workoutResult = status.data;
-                  debugPrint('_startWorkout workoutResult: $workoutResult');
-                  if (workoutResult == null) {
-                    return;
-                  }
-                }
-              },
-            );
+            startCustomWorkout();
           },
           child: const Text('start Custom Workout'),
         )
@@ -110,18 +101,48 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  SMKitWorkout getDemoWorkout() {
+  void startCustomWorkout() async{
+    var workout = await getDemoWorkout();
+
+    _smkitUiFlutterPlugin.startCustomWorkout(
+      workout: workout,
+      onHandle: (status) {
+        debugPrint(
+            '_startWorkout status: ${status.operation} ${status.data}');
+        if (status.operation == SMKitOperation.exerciseData &&
+            status.data != null) {
+          final workoutResult = status.data;
+          debugPrint('_startWorkout workoutResult: $workoutResult');
+          if (workoutResult == null) {
+            return;
+          }
+        }
+      },
+    );
+  }
+
+  Future<String> getFileUrl(String fileName) async {
+    final byteData = await rootBundle.load(fileName);
+    final file = File('${(await getTemporaryDirectory()).path}/$fileName');
+    await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+    return file.path;
+  }
+
+  Future<SMKitWorkout> getDemoWorkout() async{
+    var introURL = await getFileUrl("customWorkoutIntro.mp3"); // local sound url
+    var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3"; // remoth sound url
+
     List<SMKitExercise> exercises = [
       SMKitExercise(
-        prettyName: "Squat",
-        exerciseIntro: "exerciseIntro_SquatRegular_60",
+        prettyName: "HighKnees",
+        exerciseIntro: highKneesIntroURL,
         totalSeconds: 60,
         introSeconds: 5,
-        videoInstruction: "SquatRegularInstructionVideo",
-        uiElements: [SMKitUIElement.Timer, SMKitUIElement.GaugeOfMotion],
-        detector: "SquatRegular",
+        videoInstruction: "HighKneesInstructionVideo",
+        uiElements: [SMKitUIElement.Timer, SMKitUIElement.RepsCounter],
+        detector: "HighKnees",
         repBased: true,
-        exerciseClosure: "exerciseClosure_0_2.mp3",
+        exerciseClosure: null,
         targetReps: 60,
         targetTime: 0,
         scoreFactor: 0.5,
@@ -131,7 +152,7 @@ class _MyAppState extends State<MyApp> {
         prettyName: "Plank",
         totalSeconds: 60,
         introSeconds: 8,
-        exerciseIntro: "exerciseIntro_PlankHighStatic_60",
+        exerciseIntro: null,
         videoInstruction: "PlankHighStaticInstructionVideo",
         uiElements: [SMKitUIElement.GaugeOfMotion, SMKitUIElement.Timer],
         detector: "PlankHighStatic",
@@ -147,12 +168,12 @@ class _MyAppState extends State<MyApp> {
     return SMKitWorkout(
       id: "50",
       name: "demo workout",
-      workoutIntro: "introduction",
-      soundTrack: "soundtrack_7",
+      workoutIntro: introURL,
+      soundTrack: null,
       exercises: exercises,
-      getInFrame: "bodycal_finished",
-      bodycalFinished: "bodycal_get_in_frame",
-      workoutClosure: "workoutClosure.mp3",
+      getInFrame: null,
+      bodycalFinished: null,
+      workoutClosure: null,
     );
   }
 }
