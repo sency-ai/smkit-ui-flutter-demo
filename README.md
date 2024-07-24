@@ -12,7 +12,7 @@
 To use SMKitUI in your project, add these dependencies to your application in your `pubspec.yaml` file.
 ```yaml
 dependencies:
-flutter_smkit_ui: ^0.1.3
+flutter_smkit_ui: ^0.1.4
 ```
 
 ### Setup
