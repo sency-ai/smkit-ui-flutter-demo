@@ -5,8 +5,8 @@ To ensure the SDK works for iOS, please follow these steps:
 First, go to your Podfile located at ios/Podfile and add the following at the top of the file:
 
 ``` Ruby
-source 'https://github.com/CocoaPods/Specs.git'
 source 'https://bitbucket.org/sencyai/ios_sdks_release.git'
+source 'https://github.com/CocoaPods/Specs.git'
 ```
 
 Next, add these install hooks at the end of the file:
