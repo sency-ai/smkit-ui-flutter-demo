@@ -54,7 +54,7 @@ Please make sure you call `startAssessment()` only after configuring the plugin 
   onPressed: () {
      _smkitUiFlutterPlugin.startAssessment(
       type: AssessmentTypes.custom,
-      assessmentID: "YOUR_ASSESSMENT_ID", // If you dont have a assessmentID please use null
+      assessmentID: "YOUR_ASSESSMENT_ID", // If you don't have an assessment ID, please omit this line
       onHandle: (status) {
         debugPrint('_startAssessment status: ${status.operation} ${status.data}');
         // status.operation => workoutSummrayData, exerciseData or error

@@ -74,7 +74,7 @@ class _MyAppState extends State<MyApp> {
           onPressed: () {
             _smkitUiFlutterPlugin.startAssessment(
               type: AssessmentTypes.custom,
-              assessmentID: "YOUR_ASSESSMENT_ID", // If you dont have a assessmentID please use null
+              assessmentID: "YOUR_ASSESSMENT_ID", // If you don't have an assessment ID, please omit this line
               onHandle: (status) {
                 debugPrint(
                     '_startWorkout status: ${status.operation} ${status.data}');
