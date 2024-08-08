@@ -118,10 +118,7 @@ Future<SMKitWorkout> getDemoWorkout() async{
         uiElements: [UIElement.RepsCounter, UIElement.GaugeOfMotion], // => uiElements: UIElement[] | null
         detector: "HighKnees",  // => detector: string
         repBased: true, // => repBased: bool | null
-        exerciseClosure: null, // => exerciseClosure: string | null (url for a sound)
-        targetReps: 13, // => targetReps: int | null
-        targetTime: 20, // => targetTime: int | null
-        scoreFactor: 0.3, // => scoreFactor: double | null
+        exerciseClosure: null // => exerciseClosure: string | null (url for a sound)
       ),
       SMExercise(
         name: "Second Exercise",
@@ -131,10 +128,7 @@ Future<SMKitWorkout> getDemoWorkout() async{
         uiElements: [UIElement.GaugeOfMotion, UIElement.Timer],
         detector: "SquatRegularOverheadStatic",
         repBased: false,
-        exerciseClosure: null,
-        targetReps: null,
-        targetTime: 20,
-        scoreFactor: 0.3,
+        exerciseClosure: null
       ),
     ];
 

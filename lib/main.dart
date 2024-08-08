@@ -148,11 +148,7 @@ class _MyAppState extends State<MyApp> {
         uiElements: [SMKitUIElement.Timer, SMKitUIElement.RepsCounter],
         detector: "HighKnees",
         repBased: true,
-        exerciseClosure: null,
-        targetReps: 60,
-        targetTime: 0,
-        scoreFactor: 0.5,
-        passCriteria: null,
+        exerciseClosure: null
       ),
       SMKitExercise(
         prettyName: "Plank",
@@ -163,11 +159,7 @@ class _MyAppState extends State<MyApp> {
         uiElements: [SMKitUIElement.GaugeOfMotion, SMKitUIElement.Timer],
         detector: "PlankHighStatic",
         repBased: false,
-        exerciseClosure: "",
-        targetReps: 60,
-        targetTime: 0,
-        scoreFactor: 0.5,
-        passCriteria: null,
+        exerciseClosure: ""
       ),
     ];
 
