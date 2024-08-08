@@ -7,6 +7,7 @@
 ### [API](#api)
 * [Start Assessment](#start-assessment)
 * [Start Custom Workout](#start-custom-workout)
+* [Start Custom Assessment](#start-custom-assessmet)
 
 ## Usage
 To use SMKitUI in your project, add these dependencies to your application in your `pubspec.yaml` file.
@@ -112,7 +113,6 @@ Future<SMKitWorkout> getDemoWorkout() async{
       SMExercise(
         name: "First Exercise", // => name:string | null
         totalSeconds: 35, // => totalSeconds: int | null
-        introSeconds: 5, // => introSeconds: int | null
         videoInstruction: null,  // => videoInstruction: string | null (url for a video)
         exerciseIntro: highKneesIntroURL, // => exerciseIntro: string | null (url for a sound)
         uiElements: [UIElement.RepsCounter, UIElement.GaugeOfMotion], // => uiElements: UIElement[] | null
@@ -126,7 +126,6 @@ Future<SMKitWorkout> getDemoWorkout() async{
       SMExercise(
         name: "Second Exercise",
         totalSeconds: 25,
-        introSeconds: 5,
         videoInstruction: null,
         exerciseIntro: null,
         uiElements: [UIElement.GaugeOfMotion, UIElement.Timer],
@@ -175,3 +174,83 @@ onPressed: () {
   startCustomWorkout();
 }
 ```
+### Start Custom Assessment
+
+```dart
+
+// Add path_provider package
+import 'package:path_provider/path_provider.dart';
+
+Future<String> getFileUrl(String fileName) async {
+  final byteData = await rootBundle.load(fileName);
+  final file = File('${(await getTemporaryDirectory()).path}/$fileName');
+  await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+  return file.path;
+}
+
+ Future<SMKitWorkout> getDemoAssessment() async{
+    var introURL = await getFileUrl("customWorkoutIntro.mp3");
+    var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3";
+
+    List<SMKitExercise> exercises = [
+      SMKitExercise(
+        prettyName: "HighKnees",
+        exerciseIntro: highKneesIntroURL,
+        totalSeconds: 30,
+        videoInstruction: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+        uiElements: [SMKitUIElement.Timer, SMKitUIElement.RepsCounter],
+        detector: "HighKnees",
+        exerciseClosure: null,
+        targetReps: 30,
+        targetTime: 0,
+        scoreFactor: 0.5,
+        passCriteria: null,
+      ),
+      SMKitExercise(
+        prettyName: "SquatRegularOverheadStatic",
+        totalSeconds: 30,
+        exerciseIntro: null,
+        videoInstruction: "SquatRegularOverheadStaticInstructionVideo",
+        uiElements: [SMKitUIElement.GaugeOfMotion, SMKitUIElement.Timer],
+        detector: "SquatRegularOverheadStatic",
+        exerciseClosure: "",
+        targetReps: null,
+        targetTime: 20,
+        scoreFactor: 0.5,
+        passCriteria: null,
+      ),
+    ];
+
+    return SMKitWorkout(
+      id: "0",
+      name: "demo Assessment",
+      workoutIntro: introURL,
+      soundTrack: null,
+      exercises: exercises,
+      getInFrame: null,
+      bodycalFinished: null,
+      workoutClosure: null,
+    );
+  }
+
+ void startCustomAssessment() async {
+    var assessment = await getDemoAssessment();
+    _smkitUiFlutterPlugin.startCustomAssessment(assessment: assessment,
+        onHandle: (status) {
+          debugPrint(
+              '_startWorkout status: ${status.operation} ${status.data}');
+          if (status.operation == SMKitOperation.assessmentSummaryData &&
+              status.data != null) {
+            final workoutResult = status.data as SMKitAssessmentSummaryData;
+            debugPrint('_startWorkout assessmentSummaryData: ${workoutResult.toString()}');
+          }
+        }
+    );
+  }
+
+// Under Button widget of sort 
+onPressed: () {
+  startCustomWorkout();
+}
+```
+
