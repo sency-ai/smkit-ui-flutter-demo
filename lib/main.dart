@@ -96,6 +96,12 @@ class _MyAppState extends State<MyApp> {
             startCustomWorkout();
           },
           child: const Text('start Custom Workout'),
+        ),
+         ElevatedButton(
+          onPressed: () {
+            startCustomAssessment();
+          },
+          child: const Text('start Custom Assessment'),
         )
       ],
     );
@@ -142,11 +148,7 @@ class _MyAppState extends State<MyApp> {
         uiElements: [SMKitUIElement.Timer, SMKitUIElement.RepsCounter],
         detector: "HighKnees",
         repBased: true,
-        exerciseClosure: null,
-        targetReps: 60,
-        targetTime: 0,
-        scoreFactor: 0.5,
-        passCriteria: null,
+        exerciseClosure: null
       ),
       SMKitExercise(
         prettyName: "Plank",
@@ -157,11 +159,7 @@ class _MyAppState extends State<MyApp> {
         uiElements: [SMKitUIElement.GaugeOfMotion, SMKitUIElement.Timer],
         detector: "PlankHighStatic",
         repBased: false,
-        exerciseClosure: "",
-        targetReps: 60,
-        targetTime: 0,
-        scoreFactor: 0.5,
-        passCriteria: null,
+        exerciseClosure: ""
       ),
     ];
 
@@ -174,6 +172,66 @@ class _MyAppState extends State<MyApp> {
       getInFrame: null,
       bodycalFinished: null,
       workoutClosure: null,
+    );
+  }
+
+   Future<SMKitWorkout> getDemoAssessment() async{
+    var introURL = await getFileUrl("customWorkoutIntro.mp3");
+    var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3";
+
+    List<SMKitExercise> exercises = [
+      SMKitExercise(
+        prettyName: "HighKnees",
+        exerciseIntro: highKneesIntroURL,
+        totalSeconds: 30,
+        videoInstruction: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+        uiElements: [SMKitUIElement.Timer, SMKitUIElement.RepsCounter],
+        detector: "HighKnees",
+        exerciseClosure: null,
+        targetReps: 30,
+        targetTime: 0,
+        scoreFactor: 0.5,
+        passCriteria: null,
+      ),
+      SMKitExercise(
+        prettyName: "SquatRegularOverheadStatic",
+        totalSeconds: 30,
+        exerciseIntro: null,
+        videoInstruction: "SquatRegularOverheadStaticInstructionVideo",
+        uiElements: [SMKitUIElement.GaugeOfMotion, SMKitUIElement.Timer],
+        detector: "SquatRegularOverheadStatic",
+        exerciseClosure: "",
+        targetReps: null,
+        targetTime: 20,
+        scoreFactor: 0.5,
+        passCriteria: null,
+      ),
+    ];
+
+    return SMKitWorkout(
+      id: "0",
+      name: "demo Assessment",
+      workoutIntro: introURL,
+      soundTrack: null,
+      exercises: exercises,
+      getInFrame: null,
+      bodycalFinished: null,
+      workoutClosure: null,
+    );
+  }
+
+ void startCustomAssessment() async {
+    var assessment = await getDemoAssessment();
+    _smkitUiFlutterPlugin.startCustomAssessment(assessment: assessment,
+        onHandle: (status) {
+          debugPrint(
+              '_startWorkout status: ${status.operation} ${status.data}');
+          if (status.operation == SMKitOperation.assessmentSummaryData &&
+              status.data != null) {
+            final workoutResult = status.data as SMKitAssessmentSummaryData;
+            debugPrint('_startWorkout assessmentSummaryData: ${workoutResult.toString()}');
+          }
+        }
     );
   }
 }
