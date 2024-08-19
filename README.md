@@ -13,7 +13,7 @@
 To use SMKitUI in your project, add these dependencies to your application in your `pubspec.yaml` file.
 ```yaml
 dependencies:
-flutter_smkit_ui: ^0.1.4
+flutter_smkit_ui: ^0.1.7
 ```
 
 ### Setup
@@ -195,10 +195,7 @@ Future<String> getFileUrl(String fileName) async {
         uiElements: [SMKitUIElement.Timer, SMKitUIElement.RepsCounter],
         detector: "HighKnees",
         exerciseClosure: null,
-        targetReps: 30,
-        targetTime: 0,
-        scoreFactor: 0.5,
-        passCriteria: null,
+        scoringParams: ScoringParams(type: ScoringType.reps, scoreFactor: 0.5, targetReps: 30),
       ),
       SMKitExercise(
         prettyName: "SquatRegularOverheadStatic",
@@ -208,10 +205,7 @@ Future<String> getFileUrl(String fileName) async {
         uiElements: [SMKitUIElement.GaugeOfMotion, SMKitUIElement.Timer],
         detector: "SquatRegularOverheadStatic",
         exerciseClosure: "",
-        targetReps: null,
-        targetTime: 20,
-        scoreFactor: 0.5,
-        passCriteria: null,
+        scoringParams: ScoringParams(type: ScoringType.time, scoreFactor: 0.5, targetTime: 20),
       ),
     ];
 
