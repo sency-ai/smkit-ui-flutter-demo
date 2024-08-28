@@ -9,19 +9,19 @@
 * [Start Custom Workout](#start-custom-workout)
 * [Start Custom Assessment](#start-custom-assessmet)
 
-## Usage
+## Usage <a name="usage"></a>
 To use SMKitUI in your project, add these dependencies to your application in your `pubspec.yaml` file.
 ```yaml
 dependencies:
 flutter_smkit_ui: ^0.1.7
 ```
 
-### Setup
+### Setup <a name="Setup"></a>
 * [Android](https://github.com/sency-ai/smkit-ui-flutter-demo/blob/main/docs/android-setup.md)
 * [iOS](https://github.com/sency-ai/smkit-ui-flutter-demo/blob/main/docs/ios-setup.md)
 
 
-### Initialization
+### Initialization <a name="initialization"></a>
 To initialize SMKitUI in your App, You need to use the dedicated flutter plugin 
 ```dart
 import 'package:flutter_smkit_ui/flutter_smkit_ui_plugin.dart';
@@ -44,8 +44,8 @@ We can achive that by initialize the state in an async method.
   }
 ```
 
-## API
-### Start Assessment
+## API <a name="api"></a>
+### Start Assessment <a name="start-assessment"></a>
 Start the Assessment screen. In the parameters method `startAssessment()` You can add `SencyHandlerStatus` to track the success of the method. 
 You need to process the result that the methods return in the callback.
 
@@ -90,7 +90,7 @@ Here is a sneek peek to `SencyHandlerStatus` object:
 
 Please address the code for further reading
 
-### Start Custom Workout
+### Start Custom Workout <a name="start-custom-workout"></a>
 Start the workout screen with custom workout. In the parameters method `startCustomWorkout()` add the `SencyHandlerStatus` listener as explained above. To track the success of the method or get the expected
 data, you need to process the result that the methods return to the callback.
 ```dart
@@ -168,7 +168,7 @@ onPressed: () {
   startCustomWorkout();
 }
 ```
-### Start Custom Assessment
+### Start Custom Assessment <a name="start-custom-assessmet"></a>
 The custom assessment enables you to create a personalized evaluation using the exercises and movements from our [Movement catalog](https://github.com/sency-ai/smkit-sdk/blob/main/SDK-Movement-Catalog.md), tailored to your professional standards or personal preferences.
 ```dart
 
