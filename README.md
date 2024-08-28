@@ -5,6 +5,7 @@
 * [Initialization](#initialization)
 
 ### [API](#api)
+* [Assessment](#assessment)
 * [Start Assessment](#start-assessment)
 * [Start Custom Workout](#start-custom-workout)
 * [Start Custom Assessment](#start-custom-assessmet)
@@ -45,8 +46,8 @@ We can achive that by initialize the state in an async method.
 ```
 
 ## API <a name="api"></a>
-
-> **Assessments:** Sency offers two primary types of assessments: Sency Blueprint assessments and Custom assessments.
+### Assessment <a name="assessment"></a>
+>Sency offers two primary types of assessments: Sency Blueprint assessments and Custom assessments.
 
 >**Sency Blueprint Assessments:** Developed in collaboration with Sency’s medical and fitness experts, these assessments provide a standardized, professional way to measure core aspects of movement, fitness, and a healthy lifestyle. Simply follow the "start assessment" instructions and select the type of assessment you need.
 
