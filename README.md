@@ -169,9 +169,7 @@ onPressed: () {
 }
 ```
 ### Start Custom Assessment
-
 The custom assessment enables you to create a personalized evaluation using the exercises and movements from our [Movement catalog](https://github.com/sency-ai/smkit-sdk/blob/main/SDK-Movement-Catalog.md), tailored to your professional standards or personal preferences.
-
 ```dart
 
 // Add path_provider package
