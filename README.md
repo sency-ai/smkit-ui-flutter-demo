@@ -8,7 +8,7 @@
 * [Assessment](#assessment)
 * [Start Assessment](#start-assessment)
 * [Start Custom Workout](#start-custom-workout)
-* [Start Custom Assessment](#start-custom-assessmet)
+* [Build Your Own Assessment](#start-customized-assessmet)
 
 ## Usage <a name="usage"></a>
 To use SMKitUI in your project, add these dependencies to your application in your `pubspec.yaml` file.
@@ -47,11 +47,11 @@ We can achive that by initialize the state in an async method.
 
 ## API <a name="api"></a>
 ### Assessment <a name="assessment"></a>
->Sency offers two primary types of assessments: Sency Blueprint assessments and Custom assessments.
+>Sency offers two primary types of assessments: Sency Blueprint assessments and Customized assessments.
 
->**Sency Blueprint Assessments:** Developed in collaboration with Sency’s medical and fitness experts, these assessments provide a standardized, professional way to measure core aspects of movement, fitness, and a healthy lifestyle. Simply follow the "start assessment" instructions and select the type of assessment you need.
+>**Sency Blueprint Assessments:** Developed in collaboration with Sency’s medical and fitness experts, these assessments provide a standardized, professional way to measure core aspects of movement, fitness, and a healthy lifestyle. Simply follow the "start assessment" instructions and select the [type of assessment](#start-assessment) you need.
 
->**Sency Custom Assessments:** For those who prefer to tailor their assessments, you can create a customized evaluation using the exercises and movements from our movement catalog, according to your specific requirements (check the CustomAssessment.md file for more info).
+>**Sency Customized Assessments:** For those who prefer to build their own assessments, you can create a customized evaluation using the exercises and movements from our movement catalog, according to your specific requirements (check the CustomAssessment.md file for more info). 
 
 ### Start Assessment <a name="start-assessment"></a>
 Start the Assessment screen. In the parameters method `startAssessment()` You can add `SencyHandlerStatus` to track the success of the method. 
@@ -176,9 +176,8 @@ onPressed: () {
   startCustomWorkout();
 }
 ```
-### Start Custom Assessment <a name="start-custom-assessmet"></a>
-The custom assessment enables you to create a personalized evaluation using the exercises and movements from our [Movement catalog](https://github.com/sency-ai/smkit-sdk/blob/main/SDK-Movement-Catalog.md), tailored to your professional standards or personal preferences.
-```dart
+### Start Customized Assessment <a name="start-customized-assessmet"></a>
+> The customized assessment enables you to create a personalized evaluation using the exercises and movements from our [Movement catalog](https://github.com/sency-ai/smkit-sdk/blob/main/SDK-Movement-Catalog.md), tailored to your professional standards or personal preferences.```dart
 
 // Add path_provider package
 import 'package:path_provider/path_provider.dart';
