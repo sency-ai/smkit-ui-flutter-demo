@@ -248,8 +248,8 @@ onPressed: () {
   startCustomWorkout();
 }
 ```
-
-### Blueprint AssessmentTypes <a name="assessment-types"></a>
+<a name="assessment-types"></a>
+### Blueprint AssessmentTypes 
 | Name (enum)         | Description |More info|
 |---------------------|---------------------|---------------------|
 | Fitness             | For individuals of any activity level who seek to enhance their physical abilities, strength, and endurance through a tailored plan.| [Link](https://github.com/sency-ai/smkit-sdk/blob/main/Assessments/AI-Fitness-Assessment.md) |
