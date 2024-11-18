@@ -5,23 +5,24 @@
 * [Initialization](#initialization)
 
 ### [API](#api)
+* [Assessment](#assessment)
 * [Start Assessment](#start-assessment)
 * [Start Custom Workout](#start-custom-workout)
-* [Start Custom Assessment](#start-custom-assessmet)
+* [Build Your Own Assessment](#start-customized-assessmet)
 
-## Usage
+## Usage <a name="usage"></a>
 To use SMKitUI in your project, add these dependencies to your application in your `pubspec.yaml` file.
 ```yaml
 dependencies:
 flutter_smkit_ui: ^0.1.7
 ```
 
-### Setup
+### Setup <a name="Setup"></a>
 * [Android](https://github.com/sency-ai/smkit-ui-flutter-demo/blob/main/docs/android-setup.md)
 * [iOS](https://github.com/sency-ai/smkit-ui-flutter-demo/blob/main/docs/ios-setup.md)
 
 
-### Initialization
+### Initialization <a name="initialization"></a>
 To initialize SMKitUI in your App, You need to use the dedicated flutter plugin 
 ```dart
 import 'package:flutter_smkit_ui/flutter_smkit_ui_plugin.dart';
@@ -44,8 +45,15 @@ We can achive that by initialize the state in an async method.
   }
 ```
 
-## API
-### Start Assessment
+## API <a name="api"></a>
+### Assessment <a name="assessment"></a>
+>Sency offers two primary types of assessments: Sency Blueprint assessments and Customized assessments.
+
+>**Sency Blueprint Assessments:** Developed in collaboration with Sency’s medical and fitness experts, these assessments provide a standardized, professional way to measure core aspects of movement, fitness, and a healthy lifestyle. Simply follow the "start assessment" instructions and select the [type of assessment](#assessment-types) you need.
+
+>**Sency Customized Assessments:** For those who prefer to [beuild their own assessments](#start-customized-assessmet) you need, you can create a customized evaluation using the exercises and movements from our movement catalog, according to your specific requirements (check the CustomizedAssessment.md file for more info).
+
+### Start Assessment <a name="start-assessment"></a>
 Start the Assessment screen. In the parameters method `startAssessment()` You can add `SencyHandlerStatus` to track the success of the method. 
 You need to process the result that the methods return in the callback.
 
@@ -90,7 +98,7 @@ Here is a sneek peek to `SencyHandlerStatus` object:
 
 Please address the code for further reading
 
-### Start Custom Workout
+### Start Custom Workout <a name="start-custom-workout"></a>
 Start the workout screen with custom workout. In the parameters method `startCustomWorkout()` add the `SencyHandlerStatus` listener as explained above. To track the success of the method or get the expected
 data, you need to process the result that the methods return to the callback.
 ```dart
@@ -168,8 +176,8 @@ onPressed: () {
   startCustomWorkout();
 }
 ```
-### Start Custom Assessment
-
+### Start Customized Assessment <a name="start-customized-assessmet"></a>
+> The customized assessment enables you to create a personalized evaluation using the exercises and movements from our [Movement catalog](https://github.com/sency-ai/smkit-sdk/blob/main/SDK-Movement-Catalog.md), tailored to your professional standards or personal preferences.
 ```dart
 
 // Add path_provider package
@@ -242,3 +250,11 @@ onPressed: () {
 }
 ```
 
+### Blueprint AssessmentTypes <a name="assessment-types"></a>
+| Name (enum)         | Description |More info|
+|---------------------|---------------------|---------------------|
+| Fitness             | For individuals of any activity level who seek to enhance their physical abilities, strength, and endurance through a tailored plan.| [Link](https://github.com/sency-ai/smkit-sdk/blob/main/Assessments/AI-Fitness-Assessment.md) |
+| Body360                 | Designed for individuals of any age and activity level, this assessment determines the need for a preventative plan or medical support.| [Link](https://github.com/sency-ai/smkit-sdk/blob/main/Assessments/360-Body-Assessment.md) |
+| Strength            |For individuals of any activity level who seek to assess their strength capabilities (core and endurance) * This assessment will be available soon. Contact us for more info.| [Link](https://github.com/sency-ai/smkit-sdk/blob/main/Assessments/Strength.md) |
+| Cardio            |For individuals of any activity level who seek to assess their cardiovascular capabilities  * This assessment will be available soon. Contact us for more info.| [Link](https://github.com/sency-ai/smkit-sdk/blob/main/Assessments/Cardio.md) |
+| Custom              |If Sency created a tailored assessment for you, you probably know it, and you should use this enum.|  |
