@@ -74,7 +74,8 @@ class _MyAppState extends State<MyApp> {
           onPressed: () {
             _smkitUiFlutterPlugin.startAssessment(
               type: AssessmentTypes.custom,
-              assessmentID: "YOUR_ASSESSMENT_ID", // If you don't have an assessment ID, please omit this line
+              assessmentID:
+                  "YOUR_ASSESSMENT_ID", // If you don't have an assessment ID, please omit this line
               onHandle: (status) {
                 debugPrint(
                     '_startWorkout status: ${status.operation} ${status.data}');
@@ -97,7 +98,7 @@ class _MyAppState extends State<MyApp> {
           },
           child: const Text('start Custom Workout'),
         ),
-         ElevatedButton(
+        ElevatedButton(
           onPressed: () {
             startCustomAssessment();
           },
@@ -107,14 +108,13 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  void startCustomWorkout() async{
+  void startCustomWorkout() async {
     var workout = await getDemoWorkout();
 
-    _smkitUiFlutterPlugin.startCustomWorkout(
+    _smkitUiFlutterPlugin.startCustomaizedWorkout(
       workout: workout,
       onHandle: (status) {
-        debugPrint(
-            '_startWorkout status: ${status.operation} ${status.data}');
+        debugPrint('_startWorkout status: ${status.operation} ${status.data}');
         if (status.operation == SMKitOperation.exerciseData &&
             status.data != null) {
           final workoutResult = status.data;
@@ -130,33 +130,34 @@ class _MyAppState extends State<MyApp> {
   Future<String> getFileUrl(String fileName) async {
     final byteData = await rootBundle.load(fileName);
     final file = File('${(await getTemporaryDirectory()).path}/$fileName');
-    await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+    await file.writeAsBytes(byteData.buffer
+        .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
     return file.path;
   }
 
-  Future<SMKitWorkout> getDemoWorkout() async{
-    var introURL = await getFileUrl("customWorkoutIntro.mp3"); // local sound url
-    var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3"; // remoth sound url
+  Future<SMKitWorkout> getDemoWorkout() async {
+    var introURL =
+        await getFileUrl("customWorkoutIntro.mp3"); // local sound url
+    var highKneesIntroURL =
+        "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3"; // remoth sound url
 
     List<SMKitExercise> exercises = [
       SMKitExercise(
-        prettyName: "HighKnees",
-        exerciseIntro: highKneesIntroURL,
-        totalSeconds: 60,
-        videoInstruction: "HighKneesInstructionVideo",
-        uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
-        detector: "HighKnees",
-        exerciseClosure: null
-      ),
+          prettyName: "HighKnees",
+          exerciseIntro: highKneesIntroURL,
+          totalSeconds: 60,
+          videoInstruction: "HighKneesInstructionVideo",
+          uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
+          detector: "HighKnees",
+          exerciseClosure: null),
       SMKitExercise(
-        prettyName: "Plank",
-        totalSeconds: 60,
-        exerciseIntro: null,
-        videoInstruction: "PlankHighStaticInstructionVideo",
-        uiElements: [SMKitUIElement.gaugeOfMotion, SMKitUIElement.timer],
-        detector: "PlankHighStatic",
-        exerciseClosure: ""
-      ),
+          prettyName: "Plank",
+          totalSeconds: 60,
+          exerciseIntro: null,
+          videoInstruction: "PlankHighStaticInstructionVideo",
+          uiElements: [SMKitUIElement.gaugeOfMotion, SMKitUIElement.timer],
+          detector: "PlankHighStatic",
+          exerciseClosure: ""),
     ];
 
     return SMKitWorkout(
@@ -171,20 +172,23 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-   Future<SMKitWorkout> getDemoAssessment() async{
+  Future<SMKitWorkout> getDemoAssessment() async {
     var introURL = await getFileUrl("customWorkoutIntro.mp3");
-    var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3";
+    var highKneesIntroURL =
+        "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3";
 
     List<SMKitExercise> exercises = [
       SMKitExercise(
         prettyName: "HighKnees",
         exerciseIntro: highKneesIntroURL,
         totalSeconds: 30,
-        videoInstruction: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+        videoInstruction:
+            "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
         uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
         detector: "HighKnees",
         exerciseClosure: null,
-        scoringParams: ScoringParams(type: ScoringType.reps, targetReps: 30, scoreFactor: 0.5),
+        scoringParams: ScoringParams(
+            type: ScoringType.reps, targetReps: 30, scoreFactor: 0.5),
       ),
       SMKitExercise(
         prettyName: "SquatRegularOverheadStatic",
@@ -194,7 +198,8 @@ class _MyAppState extends State<MyApp> {
         uiElements: [SMKitUIElement.gaugeOfMotion, SMKitUIElement.timer],
         detector: "SquatRegularOverheadStatic",
         exerciseClosure: "",
-        scoringParams: ScoringParams(type: ScoringType.time, targetTime: 20, scoreFactor: 0.5),
+        scoringParams: ScoringParams(
+            type: ScoringType.time, targetTime: 20, scoreFactor: 0.5),
       ),
     ];
 
@@ -210,18 +215,19 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
- void startCustomAssessment() async {
+  void startCustomAssessment() async {
     var assessment = await getDemoAssessment();
-    _smkitUiFlutterPlugin.startCustomAssessment(assessment: assessment,
+    _smkitUiFlutterPlugin.startCustomizedAssessment(
+        assessment: assessment,
         onHandle: (status) {
           debugPrint(
               '_startWorkout status: ${status.operation} ${status.data}');
           if (status.operation == SMKitOperation.assessmentSummaryData &&
               status.data != null) {
             final workoutResult = status.data as SMKitAssessmentSummaryData;
-            debugPrint('_startWorkout assessmentSummaryData: ${workoutResult.toString()}');
+            debugPrint(
+                '_startWorkout assessmentSummaryData: ${workoutResult.toString()}');
           }
-        }
-    );
+        });
   }
 }
