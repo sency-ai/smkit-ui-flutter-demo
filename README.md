@@ -18,7 +18,7 @@ To use SMKitUI in your project, add these dependencies to your application in yo
 
 ```yaml
 dependencies:
-flutter_smkit_ui: ^0.2.0
+flutter_smkit_ui: ^0.2.1
 ```
 
 ### Setup <a name="Setup"></a>
@@ -170,10 +170,10 @@ Future<SMKitWorkout> getDemoWorkout() async{
     );
 }
 
-void startCustomWorkout() async{
+void startCustomaizedWorkout() async{
     var workout = await getDemoWorkout();
 
-    _smkitUiFlutterPlugin.startCustomWorkout(
+    _smkitUiFlutterPlugin.startCustomaizedWorkout(
         workout: workout,
         onHandle: (status) {
             debugPrint('startCustomWorkout status: ${status.operation} ${status.data}');
@@ -191,7 +191,7 @@ void startCustomWorkout() async{
 
 // Under Button widget of sort
 onPressed: () {
-  startCustomWorkout();
+  startCustomaizedWorkout();
 }
 ```
 
@@ -257,9 +257,9 @@ Future<String> getFileUrl(String fileName) async {
     );
   }
 
- void startCustomAssessment() async {
+ void startCustomizedAssessment() async {
     var assessment = await getDemoAssessment();
-    _smkitUiFlutterPlugin.startCustomAssessment(assessment: assessment,
+    _smkitUiFlutterPlugin.startCustomizedAssessment(assessment: assessment,
         onHandle: (status) {
           debugPrint(
               '_startWorkout status: ${status.operation} ${status.data}');
@@ -274,9 +274,61 @@ Future<String> getFileUrl(String fileName) async {
 
 // Under Button widget of sort
 onPressed: () {
-  startCustomWorkout();
+  startCustomizedAssessment();
 }
 ```
+
+**Set Language to Custom Assessment/Workout**
+if you want to change the language of the UI elements
+Please call `setSessionLanguge` _before_ calling `startCustomizedAssessment/Workout`
+
+```dart
+_smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.hebrew);
+startCustomWorkout();
+```
+
+# Assessment Workout Options
+
+This document explains the various workout options available during assessments.
+
+## EndExercisePreferences
+
+### Explanation
+
+`EndExercisePreferences` defines how each exercise session ends.
+
+| Preferences | Behavior
+|-------------| ---------------------------------------------------------------------------------------------------------------------------------|
+| Default     | The exercise session ends when the timer expires.                                                                                   |
+| TargetBased | The exercise session ends when either the target is reached using targetTime for static exercises or targetReps for dynamic exercises or when the timer expires.|
+
+### How to use
+
+Before starting an assessment, set the exercise end preference by calling the `setEndExercisePreferences` method:
+
+```dart
+  _smkitUiFlutterPlugin.setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased);
+```
+
+## CounterPreferences
+
+### Explention
+
+`CounterPreferences` determines which movement data will be tracked in the user interface.
+
+| Preferences | Behavior
+|-------------| ---------------------------------------------------------------------------------------------------------------------------------|
+| Default     | All movements are counted.                                                                                                    |
+| PerfectOnly | Only movements performed perfectly are counted.                                                                                     |
+
+### How to use
+
+Before starting an assessment, set the counter preference by calling the `setCounterPreferences` method:
+
+```dart
+  _smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly);
+```
+
 
 ### Blueprint AssessmentTypes <a name="assessment-types"></a>
 

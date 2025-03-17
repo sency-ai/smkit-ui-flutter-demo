@@ -1,11 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:async';
+import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 import 'package:flutter_smkit_ui/models/sm_workout.dart';
 import 'package:flutter_smkit_ui/models/smkit_ui_handlers.dart';
-import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 import 'package:path_provider/path_provider.dart';
 
 void main() {
@@ -110,7 +110,11 @@ class _MyAppState extends State<MyApp> {
 
   void startCustomWorkout() async {
     var workout = await getDemoWorkout();
-
+    _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.hebrew);
+    _smkitUiFlutterPlugin.setCounterPreferences(
+        counterPreferences: SMKitCounterPreferences.perfectOnly);
+    _smkitUiFlutterPlugin.setEndExercisePreferences(
+        endExercisePrefernces: SMKitEndExercisePreferences.targetBased);
     _smkitUiFlutterPlugin.startCustomaizedWorkout(
       workout: workout,
       onHandle: (status) {
