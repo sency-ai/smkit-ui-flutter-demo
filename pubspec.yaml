@@ -11,6 +11,7 @@ dependencies:
   flutter_smkit_ui: ^0.2.4
   path_provider: ^2.0.11
   cupertino_icons: ^1.0.6
+  flutter_dotenv: ^5.0.2
 
 dev_dependencies:
   integration_test:
@@ -37,3 +38,4 @@ flutter:
 
   assets:
     - customWorkoutIntro.mp3
+    - .env

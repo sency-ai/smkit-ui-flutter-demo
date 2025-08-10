@@ -7,8 +7,12 @@ import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 import 'package:flutter_smkit_ui/models/sm_workout.dart';
 import 'package:flutter_smkit_ui/models/smkit_ui_handlers.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
@@ -21,7 +25,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final _smkitUiFlutterPlugin = SmkitUiFlutterPlugin();
-  String apiPublicKey = "YOUR_AUTH_KEY";
+  String apiPublicKey = dotenv.env['API_PUBLIC_KEY'] ?? '';
   bool isConfigured = false;
 
   @override
