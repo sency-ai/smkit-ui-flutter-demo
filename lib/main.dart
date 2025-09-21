@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 import 'package:flutter_smkit_ui/models/sm_workout.dart';
 import 'package:flutter_smkit_ui/models/smkit_ui_handlers.dart';
 import 'package:path_provider/path_provider.dart';
+import 'WorkoutResultScreen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,34 +19,12 @@ class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
 
-  import 'dart:async';
-  import 'dart:io';
-  import 'package:flutter/material.dart';
-  import 'package:flutter/services.dart';
-  import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
-  import 'package:flutter_smkit_ui/models/sm_workout.dart';
-  import 'package:flutter_smkit_ui/models/smkit_ui_handlers.dart';
-  import 'package:path_provider/path_provider.dart';
-  import 'WorkoutResultScreen.dart';
-  import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-  void main() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    await dotenv.load(fileName: ".env");
-    runApp(const MyApp());
-  }
-
-  class MyApp extends StatefulWidget {
-    const MyApp({super.key});
-
-    @override
-    State<MyApp> createState() => _MyAppState();
-  }
-
-  class _MyAppState extends State<MyApp> {
-    final _smkitUiFlutterPlugin = SmkitUiFlutterPlugin();
-    String apiPublicKey = dotenv.env['API_PUBLIC_KEY'] ?? '';
+class _MyAppState extends State<MyApp> {
+  final _smkitUiFlutterPlugin = SmkitUiFlutterPlugin();
+  String apiPublicKey = dotenv.env['API_PUBLIC_KEY'] ?? '';
     bool showSummary = true;
     bool isConfigured = false;
     String assessmentId = '';
@@ -245,27 +222,111 @@ class MyApp extends StatefulWidget {
       );
     }
 
-    void startCustomizedAssessment() async {
+  void startCustomizedAssessment() async {
+    try {
+      debugPrint('🚀 Starting customized assessment...');
+      
+      // Check if plugin is configured
+      if (!isConfigured) {
+        debugPrint('❌ Plugin not configured yet');
+        _showErrorDialog('Plugin not configured yet. Please wait for configuration to complete.');
+        return;
+      }
+
       var assessment = await getDemoAssessment();
+      debugPrint('✅ Assessment created: ${assessment.name}');
+      
+      // Set session preferences (fire-and-forget - v1.2.8)
       _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
       _smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly);
       _smkitUiFlutterPlugin.setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased);
+      
+      debugPrint('🚀 Starting assessment...');
+      
       _smkitUiFlutterPlugin.startCustomizedAssessment(
         assessment: assessment,
         onHandle: (status) {
-          debugPrint('_startWorkout status: ${status.operation} ${status.data}');
+          debugPrint('📊 Assessment status: ${status.operation}');
+          // Handle SUCCESS case
           if (status.operation == SMKitOperation.assessmentSummaryData && status.data != null) {
             final workoutResult = status.data as SMKitAssessmentSummaryData;
-            debugPrint('_startWorkout assessmentSummaryData: ${workoutResult.toString()}');
+            debugPrint('✅ Assessment completed');
             setState(() {
               workoutResultNotifier.value = workoutResult.toString();
             });
           }
+          // Handle ERROR case
+          else if (status.operation == SMKitOperation.error) {
+            String errorMessage = 'Unknown error occurred';
+            
+            if (status.data != null) {
+              try {
+                if (status.data is String) {
+                  errorMessage = status.data as String;
+                  if (errorMessage.startsWith('{"error"')) {
+                    final match = RegExp(r'"error":\s*"([^"]*)"').firstMatch(errorMessage);
+                    if (match != null) {
+                      errorMessage = match.group(1) ?? errorMessage;
+                    }
+                  }
+                } else if (status.data is SMKitError) {
+                  final error = status.data as SMKitError;
+                  errorMessage = error.error ?? 'SMKit error occurred';
+                } else {
+                  errorMessage = status.data.toString();
+                }
+              } catch (e) {
+                errorMessage = 'Error parsing response: ${status.data}';
+              }
+            }
+            
+            debugPrint('❌ Assessment error: $errorMessage');
+            _showErrorDialog(errorMessage);
+          }
         },
       );
+          
+    } catch (e, stackTrace) {
+      debugPrint('❌ Exception in startCustomizedAssessment: $e');
+      _showErrorDialog('Exception occurred: $e');
     }
+  }
 
-    Future<String> getFileUrl(String fileName) async {
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Assessment Error'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('An error occurred:'),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<String> getFileUrl(String fileName) async {
       final byteData = await rootBundle.load(fileName);
       final file = File('${(await getTemporaryDirectory()).path}/$fileName');
       await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
@@ -310,57 +371,57 @@ class MyApp extends StatefulWidget {
     }
 
     Future<SMKitWorkout> getDemoAssessment() async {
-      var introURL = await getFileUrl("customWorkoutIntro.mp3");
-      var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3";
+    var introURL = await getFileUrl("customWorkoutIntro.mp3");
+    var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3";
 
-      List<SMKitExercise> exercises = [
-        SMKitExercise(
-          prettyName: "HighKnees",
-          exerciseIntro: highKneesIntroURL,
-          totalSeconds: 30,
-          videoInstruction: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
-          uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
-          detector: "HighKnees",
-          exerciseClosure: null,
-          scoringParams: ScoringParams(
-            type: ScoringType.reps,
-            scoreFactor: 0.5,
-            targetReps: 30,
-            targetTime: 0,
-            targetRom: "",
-          ),
+    List<SMKitExercise> exercises = [
+      SMKitExercise(
+        prettyName: "StandingHamstringMobility",
+        exerciseIntro: null,
+        totalSeconds: 20,
+        videoInstruction: "StandingHamstringMobilityInstructionVideo",
+        uiElements: [SMKitUIElement.timer, SMKitUIElement.gaugeOfMotion],
+        detector: "StandingHamstringMobility",
+        exerciseClosure: "",
+        scoringParams: ScoringParams(
+          type: ScoringType.time,
+          scoreFactor: 0.5,
+          targetReps: 3,
+          targetTime: 20,
+          targetRom: "",
         ),
-        SMKitExercise(
-          prettyName: "SquatRegularOverheadStatic",
-          totalSeconds: 30,
-          exerciseIntro: null,
-          videoInstruction: "SquatRegularOverheadStaticInstructionVideo",
-          uiElements: [SMKitUIElement.gaugeOfMotion, SMKitUIElement.timer],
-          detector: "SquatRegularOverheadStatic",
-          exerciseClosure: "",
-          summaryTitle: "Steve",
-          summarySubTitle: "JEEF",
-          summaryMainMetricTitle: "CLOE",
-          summaryMainMetricSubTitle: "MAKRON",
-          scoringParams: ScoringParams(
-            type: ScoringType.time,
-            scoreFactor: 0.5,
-            targetTime: 20,
-            targetReps: 0,
-            targetRom: "",
-          ),
+      ),
+      SMKitExercise(
+        prettyName: "SquatRegularOverheadStatic",
+        totalSeconds: 30,
+        exerciseIntro: null,
+        videoInstruction: "SquatRegularOverheadStaticInstructionVideo",
+        uiElements: [SMKitUIElement.gaugeOfMotion, SMKitUIElement.timer],
+        detector: "SquatRegularOverheadStatic",
+        exerciseClosure: "",
+        summaryTitle: "Steve",
+        summarySubTitle: "JEEF",
+        summaryMainMetricTitle: "CLOE",
+        summaryMainMetricSubTitle: "MAKRON",
+        scoringParams: ScoringParams(
+          type: ScoringType.time,
+          scoreFactor: 0.5,
+          targetTime: 20,
+          targetReps: 0,
+          targetRom: "",
         ),
-      ];
+      ),
+    ];
 
-      return SMKitWorkout(
-        id: "0",
-        name: "demo Assessment",
-        workoutIntro: introURL,
-        soundTrack: null,
-        exercises: exercises,
-        getInFrame: introURL,
-        bodycalFinished: highKneesIntroURL,
-        workoutClosure: null,
-      );
-    }
+    return SMKitWorkout(
+      id: "0",
+      name: "demo Assessment",
+      workoutIntro: introURL,
+      soundTrack: null,
+      exercises: exercises,
+      getInFrame: introURL,
+      bodycalFinished: highKneesIntroURL,
+      workoutClosure: null,
+    );
+  }
   }
