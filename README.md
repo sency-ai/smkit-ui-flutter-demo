@@ -7,7 +7,19 @@ To use SMKitUI in your project, add these dependencies to your application in yo
 
 ```yaml
 dependencies:
-  flutter_smkit_ui: ^0.2.6
+  flutter_smkit_ui: ^1.2.8
+```
+
+## ⚠️ Breaking Changes in v1.2.8
+
+**Important**: Preference setter methods (`setSessionLanguage`, `setCounterPreferences`, `setEndExercisePreferences`) no longer need to be awaited. Remove `await` from these calls to prevent hanging issues.
+
+```dart
+// ❌ Old way (v1.2.7 and earlier) - causes hanging
+await _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
+
+// ✅ New way (v1.2.8+) - fire-and-forget
+_smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
 ```
 
 ### Setup
@@ -37,9 +49,11 @@ Future<void> initPlatformState() async {
 
 ## API Guides
 
-- [Start Assessment](docs/startAssessment.md)
-- [Start Custom Workout](docs/startCustomWorkout.md)
-- [Start Customized Assessment](docs/startCustomizedAssessment.md)
+- [Start Assessment](docs/startAssessment.md) - Step-by-step guide for Blueprint assessments
+- [Start Custom Workout](docs/startCustomWorkout.md) - Creating and running custom workouts
+- [Start Customized Assessment](docs/startCustomizedAssessment.md) - Building custom assessments
+- [Error Handling](docs/errorHandling.md) - Comprehensive error handling strategies
+- [Migration Guide v1.2.8](docs/migration-v1.2.8.md) - Upgrade from previous versions
 
 Each guide contains:
 - Step-by-step instructions
@@ -56,10 +70,16 @@ Sency offers two primary types of assessments:
 
 ## Advanced Options
 
-You can customize the SDK behavior using setters before starting an assessment or workout:
+You can customize the SDK behavior using setters before starting an assessment or workout.
 
-- `setSessionLanguage(language: SMKitLanguage.english)`
-- `setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly)`
-- `setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased)`
+**⚠️ Important for v1.2.8**: These methods are now fire-and-forget (don't use `await`):
+
+- `_smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english)`
+- `_smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly)`
+- `_smkitUiFlutterPlugin.setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased)`
 
 See the relevant guide for details.
+
+## Migration from Previous Versions
+
+If you're upgrading from an earlier version, please see the [Migration Guide v1.2.8](docs/migration-v1.2.8.md) for important breaking changes and upgrade instructions.
