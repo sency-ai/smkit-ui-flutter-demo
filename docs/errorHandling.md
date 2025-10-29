@@ -1,6 +1,6 @@
 # Error Handling Guide
 
-This guide explains how to properly handle errors in the `flutter_smkit_ui` plugin (v1.2.8).
+This guide explains how to properly handle errors in the `flutter_smkit_ui` plugin (v1.2.9).
 
 ## Error Types
 

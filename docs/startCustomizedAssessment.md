@@ -1,6 +1,6 @@
 # Start Customized Assessment Guide
 
-This guide explains how to start a customized assessment using the `flutter_smkit_ui` plugin (v1.2.8).
+This guide explains how to start a customized assessment using the `flutter_smkit_ui` plugin (v1.2.9).
 
 ## Step-by-Step: Starting a Customized Assessment
 
@@ -48,7 +48,8 @@ This guide explains how to start a customized assessment using the `flutter_smki
    ```
 
 2. **Set Options (Setters)**
-   - **⚠️ Important for v1.2.8**: These methods are now fire-and-forget (don't use `await`):
+<<<<<<< HEAD
+   - **⚠️ Important for v1.2.8+**: These methods are now fire-and-forget (don't use `await`):
    ```dart
    _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
    _smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly);

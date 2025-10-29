@@ -1,6 +1,6 @@
 # Start Custom Workout Guide
 
-This guide explains how to start a custom workout using the `flutter_smkit_ui` plugin (v1.2.8).
+This guide explains how to start a custom workout using the `flutter_smkit_ui` plugin (v1.2.9).
 
 ## Step-by-Step: Starting a Custom Workout
 
@@ -61,7 +61,8 @@ This guide explains how to start a custom workout using the `flutter_smkit_ui` p
 
 ## Options (Setters)
 
-**⚠️ Important for v1.2.8**: These methods are now fire-and-forget (don't use `await`):
+<<<<<<< HEAD
+**⚠️ Important for v1.2.8+**: These methods are now fire-and-forget (don't use `await`):
 
 - `_smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english)`
 - `_smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly)`

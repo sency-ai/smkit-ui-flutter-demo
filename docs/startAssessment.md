@@ -13,7 +13,11 @@
        if (status.data == null) return;
        // Handle the result
      },
-   );s guide explains how to start a Sency Blueprint or Custom Assessment using the `flutter_smkit_ui` plugin (v1.2.8).
+   );
+
+# Start Assessment
+
+This guide explains how to start a Sency Blueprint or Custom Assessment using the `flutter_smkit_ui` plugin (v1.2.9).
 
 ## Step-by-Step: Starting an Assessment
 
@@ -44,7 +48,7 @@
 
 ## Options (Setters)
 
-**⚠️ Important for v1.2.8**: These methods are now fire-and-forget (don't use `await`):
+**⚠️ Important for v1.2.8+**: These methods are now fire-and-forget (don't use `await`):
 
 - `_smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english)`
 - `_smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly)`
