@@ -7,10 +7,14 @@ To use SMKitUI in your project, add these dependencies to your application in yo
 
 ```yaml
 dependencies:
-  flutter_smkit_ui: ^1.2.8
+  flutter_smkit_ui: ^1.2.9
 ```
 
-## ⚠️ Breaking Changes in v1.2.8
+## 🆕 What's New in v1.2.9
+
+**Android 15 16KB Page Size Compatibility**: Version 1.2.9 includes full support for Android 15's new 16KB page size requirements, ensuring optimal performance and compatibility with the latest Android devices.
+
+## ⚠️ Breaking Changes in v1.2.8+
 
 **Important**: Preference setter methods (`setSessionLanguage`, `setCounterPreferences`, `setEndExercisePreferences`) no longer need to be awaited. Remove `await` from these calls to prevent hanging issues.
 
@@ -53,7 +57,8 @@ Future<void> initPlatformState() async {
 - [Start Custom Workout](docs/startCustomWorkout.md) - Creating and running custom workouts
 - [Start Customized Assessment](docs/startCustomizedAssessment.md) - Building custom assessments
 - [Error Handling](docs/errorHandling.md) - Comprehensive error handling strategies
-- [Migration Guide v1.2.8](docs/migration-v1.2.8.md) - Upgrade from previous versions
+- [Migration Guide v1.2.9](docs/migration-v1.2.9.md) - Upgrade from previous versions
+- [Migration Guide v1.2.8](docs/migration-v1.2.8.md) - Previous version upgrade guide
 
 Each guide contains:
 - Step-by-step instructions
@@ -72,7 +77,7 @@ Sency offers two primary types of assessments:
 
 You can customize the SDK behavior using setters before starting an assessment or workout.
 
-**⚠️ Important for v1.2.8**: These methods are now fire-and-forget (don't use `await`):
+**⚠️ Important for v1.2.8+**: These methods are now fire-and-forget (don't use `await`):
 
 - `_smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english)`
 - `_smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly)`
@@ -82,4 +87,4 @@ See the relevant guide for details.
 
 ## Migration from Previous Versions
 
-If you're upgrading from an earlier version, please see the [Migration Guide v1.2.8](docs/migration-v1.2.8.md) for important breaking changes and upgrade instructions.
+If you're upgrading from an earlier version, please see the [Migration Guide v1.2.9](docs/migration-v1.2.9.md) for the latest upgrade instructions, including Android 15 compatibility improvements.

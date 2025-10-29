@@ -236,7 +236,7 @@ class _MyAppState extends State<MyApp> {
       var assessment = await getDemoAssessment();
       debugPrint('✅ Assessment created: ${assessment.name}');
       
-      // Set session preferences (fire-and-forget - v1.2.8)
+      // Set session preferences (fire-and-forget - v1.2.8+)
       _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
       _smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly);
       _smkitUiFlutterPlugin.setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased);

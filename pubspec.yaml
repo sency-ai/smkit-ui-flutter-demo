@@ -8,7 +8,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_smkit_ui: ^0.2.6
+  flutter_smkit_ui: ^1.2.9
   path_provider: ^2.0.11
   cupertino_icons: ^1.0.6
   flutter_dotenv: ^5.0.2
