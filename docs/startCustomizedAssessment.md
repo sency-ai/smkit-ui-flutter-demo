@@ -48,6 +48,7 @@ This guide explains how to start a customized assessment using the `flutter_smki
    ```
 
 2. **Set Options (Setters)**
+<<<<<<< HEAD
    - **⚠️ Important for v1.2.8+**: These methods are now fire-and-forget (don't use `await`):
    ```dart
    _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);

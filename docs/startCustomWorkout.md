@@ -61,6 +61,7 @@ This guide explains how to start a custom workout using the `flutter_smkit_ui` p
 
 ## Options (Setters)
 
+<<<<<<< HEAD
 **⚠️ Important for v1.2.8+**: These methods are now fire-and-forget (don't use `await`):
 
 - `_smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english)`
