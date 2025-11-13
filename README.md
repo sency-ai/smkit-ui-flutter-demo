@@ -7,12 +7,18 @@ To use SMKitUI in your project, add these dependencies to your application in yo
 
 ```yaml
 dependencies:
-  flutter_smkit_ui: ^1.2.9
+  flutter_smkit_ui: ^1.3.0
 ```
 
-## 🆕 What's New in v1.2.9
+## 🆕 What's New in v1.3.0
 
-**Android 15 16KB Page Size Compatibility**: Version 1.2.9 includes full support for Android 15's new 16KB page size requirements, ensuring optimal performance and compatibility with the latest Android devices.
+**Android 15 & 16 Compatibility**: Version 1.3.0 includes full support for Android 15 and Android 16 (API 36) with 16KB page size compatibility, ensuring optimal performance on the latest Android devices.
+
+**Key Updates**:
+- Upgraded Android SMKitUI to version 1.3.9
+- Modern build tools: Android Gradle Plugin 8.11.1 and Gradle 8.11.1/8.13
+- Kotlin 2.0.21 for improved compilation speed
+- Updated compileSdk to 36 (Android 16) for future-proof development
 
 ## ⚠️ Breaking Changes in v1.2.8+
 
@@ -57,8 +63,9 @@ Future<void> initPlatformState() async {
 - [Start Custom Workout](docs/startCustomWorkout.md) - Creating and running custom workouts
 - [Start Customized Assessment](docs/startCustomizedAssessment.md) - Building custom assessments
 - [Error Handling](docs/errorHandling.md) - Comprehensive error handling strategies
-- [Migration Guide v1.2.9](docs/migration-v1.2.9.md) - Upgrade from previous versions
-- [Migration Guide v1.2.8](docs/migration-v1.2.8.md) - Previous version upgrade guide
+- [Migration Guide v1.3.0](docs/migration-v1.3.0.md) - Upgrade from previous versions (latest)
+- [Migration Guide v1.2.9](docs/migration-v1.2.9.md) - Previous version upgrade guide
+- [Migration Guide v1.2.8](docs/migration-v1.2.8.md) - Earlier version upgrade guide
 
 Each guide contains:
 - Step-by-step instructions
@@ -87,4 +94,4 @@ See the relevant guide for details.
 
 ## Migration from Previous Versions
 
-If you're upgrading from an earlier version, please see the [Migration Guide v1.2.9](docs/migration-v1.2.9.md) for the latest upgrade instructions, including Android 15 compatibility improvements.
+If you're upgrading from an earlier version, please see the [Migration Guide v1.3.0](docs/migration-v1.3.0.md) for the latest upgrade instructions, including Android 16 compatibility and modern build tools.

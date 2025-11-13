@@ -1,6 +1,6 @@
 # Migration Guide to v1.2.8
 
-> **Note**: For the latest version (v1.2.9) with Android 15 16KB page size compatibility, see the [Migration Guide v1.2.9](migration-v1.2.9.md).
+> **Note**: For the latest version (v1.3.0) with Android 16 compatibility, see the [Migration Guide v1.3.0](migration-v1.3.0.md). For v1.2.9 with Android 15 16KB page size compatibility, see the [Migration Guide v1.2.9](migration-v1.2.9.md).
 
 This guide helps you migrate your existing `flutter_smkit_ui` implementation to version 1.2.8.
 
