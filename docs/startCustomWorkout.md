@@ -1,6 +1,6 @@
 # Start Custom Workout Guide
 
-This guide explains how to start a custom workout using the `flutter_smkit_ui` plugin (v1.2.9).
+This guide explains how to start a custom workout using the `flutter_smkit_ui` plugin (v1.3.0).
 
 ## Step-by-Step: Starting a Custom Workout
 
@@ -46,6 +46,88 @@ This guide explains how to start a custom workout using the `flutter_smkit_ui` p
    }
    ```
 
+## Adding Rest Periods Between Exercises
+
+You can include rest periods between active exercises by using `"Rest"` as the detector type. The SDK will treat this as a rest period, allowing users to recover between exercises.
+
+### Example: Workout with Rest Periods
+
+```dart
+Future<SMKitWorkout> getWorkoutWithRest() async {
+  var introURL = await getFileUrl("customWorkoutIntro.mp3");
+  var restIntroURL = await getFileUrl("restIntro.mp3");
+  
+  List<SMKitExercise> exercises = [
+    SMKitExercise(
+      prettyName: "High Knees",
+      exerciseIntro: "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3",
+      totalSeconds: 30,
+      videoInstruction: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+      uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
+      detector: "HighKnees",
+      exerciseClosure: null,
+    ),
+    // Add a 15-second rest period
+    SMKitExercise(
+      prettyName: "Rest",
+      exerciseIntro: restIntroURL,
+      totalSeconds: 15,  // 15 seconds rest
+      videoInstruction: null,
+      uiElements: [SMKitUIElement.timer],
+      detector: "Rest",  // Special detector type for rest periods
+      exerciseClosure: null,
+    ),
+    SMKitExercise(
+      prettyName: "Squats",
+      exerciseIntro: "https://example.com/squats-intro.mp3",
+      totalSeconds: 30,
+      videoInstruction: "https://example.com/squats.mp4",
+      uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
+      detector: "Squats",
+      exerciseClosure: null,
+    ),
+    // Another rest period
+    SMKitExercise(
+      prettyName: "Rest",
+      exerciseIntro: restIntroURL,
+      totalSeconds: 20,  // 20 seconds rest
+      videoInstruction: null,
+      uiElements: [SMKitUIElement.timer],
+      detector: "Rest",
+      exerciseClosure: null,
+    ),
+    SMKitExercise(
+      prettyName: "Lunges",
+      exerciseIntro: "https://example.com/lunges-intro.mp3",
+      totalSeconds: 30,
+      videoInstruction: null,
+      uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
+      detector: "Lunges",
+      exerciseClosure: null,
+    ),
+  ];
+
+  return SMKitWorkout(
+    id: "workout-with-rest",
+    name: "HIIT Workout with Rest",
+    workoutIntro: introURL,
+    soundTrack: null,
+    exercises: exercises,
+    getInFrame: null,
+    bodycalFinished: null,
+    workoutClosure: null,
+  );
+}
+```
+
+**Key Points for Rest Periods**:
+- Set `detector: "Rest"` to create a rest period
+- Use `totalSeconds` to define the rest duration (typically 10-30 seconds)
+- Only include `SMKitUIElement.timer` for UI elements during rest
+- `videoInstruction` should be `null` for rest periods
+- The SDK will display a rest screen without exercise tracking
+- Users can see the countdown timer during the rest period
+
 2. **Start the Custom Workout**
    ```dart
    _smkitUiFlutterPlugin.startCustomaizedWorkout(
@@ -61,7 +143,6 @@ This guide explains how to start a custom workout using the `flutter_smkit_ui` p
 
 ## Options (Setters)
 
-<<<<<<< HEAD
 **⚠️ Important for v1.2.8+**: These methods are now fire-and-forget (don't use `await`):
 
 - `_smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english)`
