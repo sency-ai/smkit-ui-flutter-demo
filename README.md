@@ -7,10 +7,26 @@ To use SMKitUI in your project, add these dependencies to your application in yo
 
 ```yaml
 dependencies:
-  flutter_smkit_ui: ^1.3.0
+  flutter_smkit_ui: ^1.3.3
 ```
 
-## 🆕 What's New in v1.3.0
+## 🆕 What's New
+
+### v1.3.3 - Phone Calibration & Color Theme Customization
+
+**New Features**:
+- **🎨 Color Theme Customization**: Customize UI theme colors via `primaryColor` in modifications parameter
+  - Supports 8 predefined themes: green, blue, orange, purple, red (maps to orange), silver, gold, and pink
+  - Set via hex color codes (e.g., `'#4CAF50'` for green)
+  - Applied globally across the SDK UI
+  
+- **📱 Phone Calibration Control**: Control phone calibration screen visibility via `phoneCalibration` settings
+  - Show/hide calibration screen with `enabled` boolean
+  - Additional settings: `autoCalibrate` and `calibrationSensitivity` (for future use)
+  - Default: `true` (calibration screen shown by default)
+```
+
+### v1.3.0 - Android 15 & 16 Compatibility
 
 **Android 15 & 16 Compatibility**: Version 1.3.0 includes full support for Android 15 and Android 16 (API 36) with 16KB page size compatibility, ensuring optimal performance on the latest Android devices.
 
@@ -82,6 +98,8 @@ Sency offers two primary types of assessments:
 
 ## Advanced Options
 
+### Session Preferences
+
 You can customize the SDK behavior using setters before starting an assessment or workout.
 
 **⚠️ Important for v1.2.8+**: These methods are now fire-and-forget (don't use `await`):
@@ -89,6 +107,12 @@ You can customize the SDK behavior using setters before starting an assessment o
 - `_smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english)`
 - `_smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly)`
 - `_smkitUiFlutterPlugin.setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased)`
+
+### UI Customization (v1.3.3+)
+
+Customize the SDK UI through the `modifications` parameter when starting assessments or workouts.
+
+**Phone Calibration**: Control the phone calibration screen.
 
 See the relevant guide for details.
 
