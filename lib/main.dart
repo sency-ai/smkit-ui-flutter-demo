@@ -11,7 +11,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    // .env file is optional, will use empty string as fallback
+    debugPrint("Warning: .env file not found: $e");
+  }
   runApp(const MyApp());
 }
 
@@ -31,6 +36,41 @@ class _MyAppState extends State<MyApp> {
     AssessmentTypes selectedAssessmentType = AssessmentTypes.fitness;
     ValueNotifier<String> workoutResultNotifier = ValueNotifier<String>("");
     final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
+  // Color customization - using default 'green' theme
+  final String selectedTheme = 'green';
+  
+  // Phone calibration settings - using default values
+  final bool phoneCalibrationEnabled = true;
+  final bool autoCalibrate = false;
+  final double calibrationSensitivity = 0.8;
+
+  // Map theme names to primary colors (only primaryColor is used to set the SDK theme)
+  final Map<String, String> themePrimaryColors = {
+    'green': '#4CAF50',
+    'blue': '#2196F3',
+    'orange': '#FF9800',
+    'red': '#F44336',
+    'purple': '#9C27B0',
+    'silver': '#C0C0C0',
+    'gold': '#FFD700',
+    'pink': '#FF69B4',
+  };
+
+  // Get modifications map with current customization settings
+  Map<String, dynamic> get currentModifications => buildModifications();
+
+  // Build modifications map with default customization settings
+  Map<String, dynamic> buildModifications() {
+    return {
+      'primaryColor': themePrimaryColors[selectedTheme] ?? themePrimaryColors['green']!,
+      'phoneCalibration': {
+        'enabled': phoneCalibrationEnabled,
+        'autoCalibrate': autoCalibrate,
+        'calibrationSensitivity': calibrationSensitivity,
+      },
+    };
+  }
 
     @override
     void initState() {
@@ -130,6 +170,7 @@ class _MyAppState extends State<MyApp> {
                                   'birthday': DateTime(1990, 1, 1).millisecondsSinceEpoch,
                                 },
                                 showSummary: showSummary,
+                                modifications: currentModifications,
                                 onHandle: (status) {
                                   debugPrint('_startWorkout status: [32m${status.operation}[0m [34m${status.data}[0m');
                                   if (status.operation == SMKitOperation.exerciseData && status.data != null) {
@@ -175,6 +216,7 @@ class _MyAppState extends State<MyApp> {
                               _smkitUiFlutterPlugin.startAssessment(
                                 type: AssessmentTypes.custom,
                                 assessmentID: assessmentId == "" ? null : assessmentId,
+                                modifications: currentModifications,
                                 onHandle: (status) {
                                   debugPrint('_startWorkout status: ${status.operation} ${status.data}');
                                   if (status.operation == SMKitOperation.exerciseData && status.data != null) {
@@ -209,6 +251,7 @@ class _MyAppState extends State<MyApp> {
       var workout = await getDemoWorkout();
       _smkitUiFlutterPlugin.startCustomaizedWorkout(
         workout: workout,
+        modifications: currentModifications,
         onHandle: (status) {
           debugPrint('_startWorkout status: ${status.operation} ${status.data}');
           if (status.operation == SMKitOperation.exerciseData && status.data != null) {
@@ -245,6 +288,7 @@ class _MyAppState extends State<MyApp> {
       
       _smkitUiFlutterPlugin.startCustomizedAssessment(
         assessment: assessment,
+        modifications: currentModifications,
         onHandle: (status) {
           debugPrint('📊 Assessment status: ${status.operation}');
           // Handle SUCCESS case
