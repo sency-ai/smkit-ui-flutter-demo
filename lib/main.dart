@@ -396,7 +396,7 @@ class _MyAppState extends State<MyApp> {
           totalSeconds: 30,
           exerciseIntro: null,
           videoInstruction: "PlankHighStaticInstructionVideo",
-          uiElements: [SMKitUIElement.gaugeOfMotion, SMKitUIElement.timer],
+          uiElements: [SMKitUIElement.timer],
           detector: "PlankHighStatic",
           exerciseClosure: "",
         ),
