@@ -7,12 +7,12 @@ To use SMKitUI in your project, add these dependencies to your application in yo
 
 ```yaml
 dependencies:
-  flutter_smkit_ui: ^1.3.3
+  flutter_smkit_ui: ^1.3.4
 ```
 
 ## 🆕 What's New
 
-### v1.3.3 - Phone Calibration & Color Theme Customization
+### v1.3.4 - Phone Calibration & Color Theme Customization
 
 **New Features**:
 - **🎨 Color Theme Customization**: Customize UI theme colors via `primaryColor` in modifications parameter

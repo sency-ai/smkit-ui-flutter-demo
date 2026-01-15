@@ -103,10 +103,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_smkit_ui
-      sha256: "33008244b865618aab7c492dcdcddb89858a6d675974bcaa30f1c82dde049406"
+      sha256: "5102ce04a625c2c5dcad4ca7ddd04f2c56d9094ac8f0a145734714dbae461e26"
       url: "https://pub.dev"
     source: hosted
-    version: "1.3.3"
+    version: "1.3.4"
   flutter_test:
     dependency: "direct dev"
     description: flutter
