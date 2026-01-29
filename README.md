@@ -7,10 +7,17 @@ To use SMKitUI in your project, add these dependencies to your application in yo
 
 ```yaml
 dependencies:
-  flutter_smkit_ui: ^1.3.5
+  flutter_smkit_ui: ^1.3.7
 ```
 
 ## 🆕 What's New
+
+### v1.3.7 - Native SDK Updates
+- **📱 Android SDK**: Upgraded SMKitUI to 1.4.7 for improved functionality and stability
+
+### v1.3.6 - Platform improvements and stability enhancements
+- Better synchronization and initialization handling
+- Improved reliability across Android and iOS platforms
 
 ### v1.3.5 - In Android, the SDK automatically selects the best pose estimation model based on device capabilities - Pro for maximum accuracy, Lite and UltraLite for smooth real-time performance on lower-end devices.
 
