@@ -187,7 +187,7 @@ class _MyAppState extends State<MyApp> {
                           ),
                           ElevatedButton(
                             onPressed: () {
-                              startCustomaizedWorkout();
+                              startCustomizedWorkout();
                             },
                             child: const Text('Customized Workout'),
                           ),
@@ -247,9 +247,9 @@ class _MyAppState extends State<MyApp> {
       );
     }
 
-    void startCustomaizedWorkout() async {
+    void startCustomizedWorkout() async {
       var workout = await getDemoWorkout();
-      _smkitUiFlutterPlugin.startCustomaizedWorkout(
+      _smkitUiFlutterPlugin.startCustomizedWorkout(
         workout: workout,
         modifications: currentModifications,
         onHandle: (status) {
