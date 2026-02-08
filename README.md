@@ -7,7 +7,7 @@ To use SMKitUI in your project, add these dependencies to your application in yo
 
 ```yaml
 dependencies:
-  flutter_smkit_ui: ^1.3.8
+  flutter_smkit_ui: ^1.3.9
 ```
 
 ## 🆕 What's New
