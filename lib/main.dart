@@ -7,18 +7,16 @@ import 'package:flutter_smkit_ui/models/sm_workout.dart';
 import 'package:flutter_smkit_ui/models/smkit_ui_handlers.dart';
 import 'package:path_provider/path_provider.dart';
 import 'WorkoutResultScreen.dart';
+import 'UISettingsScreen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_smkit_ui/models/smkit_ui_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    // .env file is optional, will use empty string as fallback
-    debugPrint("Warning: .env file not found: $e");
-  }
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -30,16 +28,25 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final _smkitUiFlutterPlugin = SmkitUiFlutterPlugin();
   String apiPublicKey = dotenv.env['API_PUBLIC_KEY'] ?? '';
-    bool showSummary = true;
-    bool isConfigured = false;
-    String assessmentId = '';
-    AssessmentTypes selectedAssessmentType = AssessmentTypes.fitness;
-    ValueNotifier<String> workoutResultNotifier = ValueNotifier<String>("");
-    final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  bool showSummary = true;
+  bool isConfigured = false;
+  String assessmentId = '';
+  AssessmentTypes selectedAssessmentType = AssessmentTypes.fitness;
+  ValueNotifier<String> workoutResultNotifier = ValueNotifier<String>("");
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
+  // UI / Session settings
+  SkeletonConfig? _skeletonConfig;
+  bool _allowAudioMixing = false;
+  bool _showExternalAudioControl = false;
+  bool _enableIntelligenceRest = false;
 
   // Color customization - using default 'green' theme
   final String selectedTheme = 'green';
-  
+
+  // Get modifications map with current customization settings
+  Map<String, dynamic> get currentModifications => buildModifications();
+
   // Phone calibration settings - using default values
   final bool phoneCalibrationEnabled = true;
   final bool autoCalibrate = false;
@@ -57,8 +64,32 @@ class _MyAppState extends State<MyApp> {
     'pink': '#FF69B4',
   };
 
-  // Get modifications map with current customization settings
-  Map<String, dynamic> get currentModifications => buildModifications();
+  @override
+  void initState() {
+    super.initState();
+    initPlatformState();
+    workoutResultNotifier.addListener(_handleWorkoutResult);
+  }
+
+  void _handleWorkoutResult() {
+    if (workoutResultNotifier.value.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(Duration(seconds: 1), () {
+          _navigateToWorkoutResult();
+        });
+      });
+    }
+  }
+
+  void _navigateToWorkoutResult() {
+    _navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (context) => WorkoutResultScreen(
+          workoutResult: workoutResultNotifier.value,
+        ),
+      ),
+    );
+  }
 
   // Build modifications map with default customization settings
   Map<String, dynamic> buildModifications() {
@@ -69,206 +100,230 @@ class _MyAppState extends State<MyApp> {
         'autoCalibrate': autoCalibrate,
         'calibrationSensitivity': calibrationSensitivity,
       },
+      'showProgressBar': true,
+      'showCounters': true,
     };
   }
 
-    @override
-    void initState() {
-      super.initState();
-      initPlatformState();
-      workoutResultNotifier.addListener(_handleWorkoutResult);
-    }
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initPlatformState() async {
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
 
-    void _handleWorkoutResult() {
-      if (workoutResultNotifier.value.isNotEmpty) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Future.delayed(const Duration(seconds: 1), () {
-            _navigateToWorkoutResult();
-          });
-        });
-      }
-    }
+    _smkitUiFlutterPlugin.configure(key: apiPublicKey).then(
+          (result) => {
+            setState(() {
+              isConfigured = result == true;
+            })
+          },
+        );
+  }
 
-    void _navigateToWorkoutResult() {
-      _navigatorKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (context) => WorkoutResultScreen(
-            workoutResult: workoutResultNotifier.value,
-          ),
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      navigatorKey: _navigatorKey,
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Plugin example app'),
         ),
-      );
-    }
-
-    Future<void> initPlatformState() async {
-      if (!mounted) return;
-      _smkitUiFlutterPlugin.configure(key: apiPublicKey).then(
-        (result) {
-          setState(() {
-            isConfigured = result == true;
-          });
-        },
-      );
-    }
-
-    @override
-    Widget build(BuildContext context) {
-      return MaterialApp(
-        navigatorKey: _navigatorKey,
-        home: Scaffold(
-          appBar: AppBar(
-            title: const Text('Plugin example app'),
-          ),
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                isConfigured
-                    ? Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text('Assessment Type: '),
-                              DropdownButton<AssessmentTypes>(
-                                value: selectedAssessmentType,
-                                items: AssessmentTypes.values.map((type) {
-                                  return DropdownMenuItem(
-                                    value: type,
-                                    child: Text(type.name),
-                                  );
-                                }).toList(),
-                                onChanged: (type) {
-                                  if (type != null) {
-                                    setState(() {
-                                      selectedAssessmentType = type;
-                                    });
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text('Show Summary'),
-                              Switch(
-                                value: showSummary,
-                                onChanged: (val) {
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              isConfigured
+                  ? Column(
+                      children: [
+                        // Assessment type dropdown
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('Assessment Type: '),
+                            DropdownButton<AssessmentTypes>(
+                              value: selectedAssessmentType,
+                              items: AssessmentTypes.values.map((type) {
+                                return DropdownMenuItem(
+                                  value: type,
+                                  child: Text(type.name),
+                                );
+                              }).toList(),
+                              onChanged: (type) {
+                                if (type != null) {
                                   setState(() {
-                                    showSummary = val;
+                                    selectedAssessmentType = type;
                                   });
-                                },
-                              ),
-                            ],
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              _smkitUiFlutterPlugin.startAssessment(
-                                type: selectedAssessmentType,
-                                userData: {
-                                  'gender': 'Male',
-                                  'birthday': DateTime(1990, 1, 1).millisecondsSinceEpoch,
-                                },
-                                showSummary: showSummary,
-                                modifications: currentModifications,
-                                onHandle: (status) {
-                                  debugPrint('_startWorkout status: [32m${status.operation}[0m [34m${status.data}[0m');
-                                  if (status.operation == SMKitOperation.exerciseData && status.data != null) {
-                                    final workoutResult = status.data;
-                                    debugPrint('_startWorkout workoutResult: $workoutResult');
-                                    if (workoutResult == null) {
-                                      return;
-                                    }
-                                  }
-                                },
-                              );
-                            },
-                            child: const Text('Start Sency Assessment'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              startCustomizedWorkout();
-                            },
-                            child: const Text('Customized Workout'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              startCustomizedAssessment();
-                            },
-                            child: const Text('Customized Assessment'),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: TextField(
-                              onChanged: (value) {
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        // show summary toggle
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('Show Summary'),
+                            Switch(
+                              value: showSummary,
+                              onChanged: (val) {
                                 setState(() {
-                                  assessmentId = value;
+                                  showSummary = val;
                                 });
                               },
-                              decoration: const InputDecoration(
-                                labelText: 'Assessment ID',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.tune),
+                          label: Text(_skeletonConfig == null ? 'UI Settings' : 'UI Settings ✓'),
+                          onPressed: () async {
+                            final result = await _navigatorKey.currentState!.push<UISettingsResult>(
+                              MaterialPageRoute(
+                                builder: (_) => UISettingsScreen(
+                                  plugin: _smkitUiFlutterPlugin,
+                                  initialConfig: _skeletonConfig,
+                                  initialAllowAudioMixing: _allowAudioMixing,
+                                  initialShowExternalAudioControl: _showExternalAudioControl,
+                                  initialEnableIntelligenceRest: _enableIntelligenceRest,
+                                ),
                               ),
+                            );
+                            if (result != null) {
+                              setState(() {
+                                _skeletonConfig = result.skeletonConfig;
+                                _allowAudioMixing = result.allowAudioMixing;
+                                _showExternalAudioControl = result.showExternalAudioControl;
+                                _enableIntelligenceRest = result.enableIntelligenceRest;
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            _smkitUiFlutterPlugin.startAssessment(
+                              type: selectedAssessmentType,
+                              userData: {
+                                'gender': 'Male',
+                                'birthday': DateTime(1990, 1, 1).millisecondsSinceEpoch,
+                              },
+                              showSummary: showSummary,
+                              modifications: currentModifications,
+                              onHandle: (status) {
+                                debugPrint(
+                                    '_startWorkout status: ${status.operation} ${status.data}');
+                                if (status.operation ==
+                                        SMKitOperation.exerciseData &&
+                                    status.data != null) {
+                                  final workoutResult = status.data;
+                                  debugPrint(
+                                      '_startWorkout workoutResult: $workoutResult');
+                                  if (workoutResult == null) {
+                                    return;
+                                  }
+                                }
+                              },
+                            );
+                          },
+                          child: const Text('Start Sency Assessment'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            startCustomizedWorkout();
+                          },
+                          child: const Text('Customized Workout'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            startCustomizedAssessment();
+                          },
+                          child: const Text('Customized Assessment'),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextField(
+                            onChanged: (value) {
+                              setState(() {
+                                assessmentId = value;
+                              });
+                            },
+                            decoration: const InputDecoration(
+                              labelText: 'Assessment ID',
                             ),
                           ),
-                          ElevatedButton(
-                            onPressed: () {
-                              debugPrint('Custom Assessment ID: $assessmentId');
-                              _smkitUiFlutterPlugin.startAssessment(
-                                type: AssessmentTypes.custom,
-                                assessmentID: assessmentId == "" ? null : assessmentId,
-                                modifications: currentModifications,
-                                onHandle: (status) {
-                                  debugPrint('_startWorkout status: ${status.operation} ${status.data}');
-                                  if (status.operation == SMKitOperation.exerciseData && status.data != null) {
-                                    final workoutResult = status.data;
-                                    debugPrint('_startWorkout workoutResult: $workoutResult');
-                                    if (workoutResult == null) {
-                                      return;
-                                    }
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Add logic to handle custom assessment with assessmentId
+                            debugPrint('Custom Assessment ID: $assessmentId');
+
+                            _smkitUiFlutterPlugin.startAssessment(
+                              type: AssessmentTypes.custom,
+                              assessmentID:
+                                  assessmentId == "" ? null : assessmentId,
+                              modifications: currentModifications,
+                              onHandle: (status) {
+                                debugPrint(
+                                    '_startWorkout status: ${status.operation} ${status.data}');
+                                if (status.operation ==
+                                        SMKitOperation.exerciseData &&
+                                    status.data != null) {
+                                  final workoutResult = status.data;
+                                  debugPrint(
+                                      '_startWorkout workoutResult: $workoutResult');
+                                  if (workoutResult == null) {
+                                    return;
                                   }
-                                },
-                              );
-                            },
-                            child: const Text('Custom Assessment'),
-                          ),
-                        ],
-                      )
-                    : const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("Configuring.."),
-                          CircularProgressIndicator()
-                        ],
-                      ),
-              ],
-            ),
+                                }
+                              },
+                            );
+                          },
+                          child: const Text('Custom Assessment'),
+                        ),
+                      ],
+                    )
+                  : const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Configuring.."),
+                        CircularProgressIndicator()
+                      ],
+                    ),
+            ],
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    void startCustomizedWorkout() async {
-      var workout = await getDemoWorkout();
-      _smkitUiFlutterPlugin.startCustomizedWorkout(
-        workout: workout,
-        modifications: currentModifications,
-        onHandle: (status) {
-          debugPrint('_startWorkout status: ${status.operation} ${status.data}');
-          if (status.operation == SMKitOperation.exerciseData && status.data != null) {
-            final workoutResult = status.data as SMCustomWorkoutData;
-            debugPrint('_startWorkout assessmentSummaryData: ${workoutResult.toString()}');
-            if (workoutResult == null) {
-              return;
-            }
+  void startCustomizedWorkout() async {
+    var workout = await getDemoWorkout();
+
+    _smkitUiFlutterPlugin.startCustomizedWorkout(
+      workout: workout,
+      modifications: currentModifications,
+      onHandle: (status) {
+        debugPrint('_startWorkout status: ${status.operation} ${status.data}');
+        if (status.operation == SMKitOperation.exerciseData &&
+            status.data != null) {
+          final workoutResult = status.data as SMCustomWorkoutData;
+          debugPrint(
+              '_startWorkout assessmentSummaryData: ${workoutResult.toString()}');
+
+          if (workoutResult == null) {
+            return;
           }
-        },
-      );
-    }
+        }
+      },
+    );
+  }
 
   void startCustomizedAssessment() async {
     try {
       debugPrint('🚀 Starting customized assessment...');
-      
+
       // Check if plugin is configured
       if (!isConfigured) {
         debugPrint('❌ Plugin not configured yet');
@@ -278,58 +333,90 @@ class _MyAppState extends State<MyApp> {
 
       var assessment = await getDemoAssessment();
       debugPrint('✅ Assessment created: ${assessment.name}');
-      
-      // Set session preferences (fire-and-forget - v1.2.8+)
+
+      // Set session preferences (fire-and-forget)
       _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
       _smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly);
       _smkitUiFlutterPlugin.setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased);
-      
-      debugPrint('🚀 Starting assessment...');
-      
+
+      debugPrint('🚀 Starting assessment with theme: $selectedTheme...');
+
       _smkitUiFlutterPlugin.startCustomizedAssessment(
-        assessment: assessment,
-        modifications: currentModifications,
-        onHandle: (status) {
-          debugPrint('📊 Assessment status: ${status.operation}');
-          // Handle SUCCESS case
-          if (status.operation == SMKitOperation.assessmentSummaryData && status.data != null) {
-            final workoutResult = status.data as SMKitAssessmentSummaryData;
-            debugPrint('✅ Assessment completed');
-            setState(() {
-              workoutResultNotifier.value = workoutResult.toString();
-            });
-          }
-          // Handle ERROR case
-          else if (status.operation == SMKitOperation.error) {
-            String errorMessage = 'Unknown error occurred';
-            
-            if (status.data != null) {
-              try {
-                if (status.data is String) {
-                  errorMessage = status.data as String;
-                  if (errorMessage.startsWith('{"error"')) {
-                    final match = RegExp(r'"error":\s*"([^"]*)"').firstMatch(errorMessage);
-                    if (match != null) {
-                      errorMessage = match.group(1) ?? errorMessage;
-                    }
-                  }
-                } else if (status.data is SMKitError) {
-                  final error = status.data as SMKitError;
-                  errorMessage = error.error ?? 'SMKit error occurred';
-                } else {
-                  errorMessage = status.data.toString();
-                }
-              } catch (e) {
-                errorMessage = 'Error parsing response: ${status.data}';
+          assessment: assessment,
+          modifications: currentModifications,
+          onHandle: (status) {
+            debugPrint('📊 Assessment status: ${status.operation}');
+
+            // Handle SUCCESS case
+            if (status.operation == SMKitOperation.assessmentSummaryData &&
+                status.data != null) {
+              final workoutResult = status.data as SMKitAssessmentSummaryData;
+              debugPrint('✅ Assessment completed');
+              debugPrint('📊 ASSESSMENT SUMMARY DATA:');
+              debugPrint('════════════════════════════════════════');
+              debugPrint('Session ID: ${workoutResult.sessionId}');
+              debugPrint('Activity Type: ${workoutResult.activityType}');
+              debugPrint('Start Time: ${workoutResult.startTime}');
+              debugPrint('End Time: ${workoutResult.endTime}');
+              debugPrint('Total Time: ${workoutResult.totalTime}');
+              debugPrint('Total Score: ${workoutResult.totalScore}');
+              debugPrint('Total Score Segmented: ${workoutResult.totalScoreSegmented}');
+              debugPrint('User Data: ${workoutResult.userData}');
+              debugPrint('Number of Exercises: ${workoutResult.exercises.length}');
+              debugPrint('────────────────────────────────────────');
+              for (int i = 0; i < workoutResult.exercises.length; i++) {
+                final exercise = workoutResult.exercises[i];
+                debugPrint('Exercise ${i + 1}:');
+                debugPrint('  Exercise ID: ${exercise.exerciseInfo?.exerciseID}');
+                debugPrint('  Pretty Name: ${exercise.exerciseInfo?.prettyName}');
+                debugPrint('  Total Score: ${exercise.totalScore}');
+                debugPrint('  Performance Score: ${exercise.performanceScore}');
+                debugPrint('  Technique Score: ${exercise.techniqueScore}');
+                debugPrint('  Reps Performed: ${exercise.repsPerformed}');
+                debugPrint('  UI Elements: ${exercise.exerciseInfo?.uiElements}');
+                debugPrint('  Instruction Video: ${exercise.exerciseInfo?.instructionVideo}');
+                debugPrint('  Voice Intro: ${exercise.exerciseInfo?.voiceIntro}');
+                debugPrint('  Voice Outro: ${exercise.exerciseInfo?.voiceOutro}');
+                debugPrint('  Scoring Params: ${exercise.exerciseInfo?.scoringParams?.toString()}');
+                debugPrint('  Feedbacks: ${exercise.feedbacks}');
               }
+              debugPrint('════════════════════════════════════════');
+              debugPrint('Full toString: ${workoutResult.toString()}');
+              debugPrint('════════════════════════════════════════');
+              setState(() {
+                workoutResultNotifier.value = workoutResult.toString();
+              });
             }
-            
-            debugPrint('❌ Assessment error: $errorMessage');
-            _showErrorDialog(errorMessage);
-          }
-        },
-      );
-          
+            // Handle ERROR case
+            else if (status.operation == SMKitOperation.error) {
+              String errorMessage = 'Unknown error occurred';
+
+              if (status.data != null) {
+                try {
+                  if (status.data is String) {
+                    errorMessage = status.data as String;
+                    if (errorMessage.startsWith('{"error"')) {
+                      final match = RegExp(r'"error":\s*"([^"]*)"').firstMatch(errorMessage);
+                      if (match != null) {
+                        errorMessage = match.group(1) ?? errorMessage;
+                      }
+                    }
+                  } else if (status.data is SMKitError) {
+                    final error = status.data as SMKitError;
+                    errorMessage = error.error ?? 'SMKit error occurred';
+                  } else {
+                    errorMessage = status.data.toString();
+                  }
+                } catch (e) {
+                  errorMessage = 'Error parsing response: ${status.data}';
+                }
+              }
+
+              debugPrint('❌ Assessment error: $errorMessage');
+              _showErrorDialog(errorMessage);
+            }
+          });
+
     } catch (e, stackTrace) {
       debugPrint('❌ Exception in startCustomizedAssessment: $e');
       _showErrorDialog('Exception occurred: $e');
@@ -337,107 +424,138 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Assessment Error'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('An error occurred:'),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
+    // Use navigatorKey to ensure we have a valid context
+    final navigatorContext = _navigatorKey.currentContext;
+    if (navigatorContext == null) {
+      debugPrint('⚠️ Cannot show error dialog: No navigator context available');
+      debugPrint('Error message: $message');
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: navigatorContext,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Assessment Error'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('An error occurred:'),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
                 ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+          );
+        },
+      );
+    });
   }
 
   Future<String> getFileUrl(String fileName) async {
-      final byteData = await rootBundle.load(fileName);
-      final file = File('${(await getTemporaryDirectory()).path}/$fileName');
-      await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
-      return file.path;
-    }
+    final byteData = await rootBundle.load(fileName);
+    final file = File('${(await getTemporaryDirectory()).path}/$fileName');
+    await file.writeAsBytes(byteData.buffer
+        .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+    return file.path;
+  }
 
-    Future<SMKitWorkout> getDemoWorkout() async {
-      var introURL = await getFileUrl("customWorkoutIntro.mp3");
-      var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3";
-
-      List<SMKitExercise> exercises = [
-        SMKitExercise(
-          prettyName: "HighKnees",
-          exerciseIntro: highKneesIntroURL,
-          totalSeconds: 30,
-          videoInstruction: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
-          uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
-          detector: "HighKnees",
-          exerciseClosure: null,
-        ),
-        SMKitExercise(
-          prettyName: "Plank",
-          totalSeconds: 30,
-          exerciseIntro: null,
-          videoInstruction: "PlankHighStaticInstructionVideo",
-          uiElements: [SMKitUIElement.timer],
-          detector: "PlankHighStatic",
-          exerciseClosure: "",
-        ),
-      ];
-
-      return SMKitWorkout(
-        id: "50",
-        name: "demo workout",
-        workoutIntro: introURL,
-        soundTrack: null,
-        exercises: exercises,
-        getInFrame: null,
-        bodycalFinished: null,
-        workoutClosure: null,
-      );
-    }
-
-    Future<SMKitWorkout> getDemoAssessment() async {
+  Future<SMKitWorkout> getDemoWorkout() async {
     var introURL = await getFileUrl("customWorkoutIntro.mp3");
-    var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3";
+    var highKneesIntroURL =
+        "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3";
 
     List<SMKitExercise> exercises = [
       SMKitExercise(
-        prettyName: "StandingHamstringMobility",
+        prettyName: "HighKnees",
+        exerciseIntro: highKneesIntroURL,
+        totalSeconds: 30,
+        videoInstruction: "HighKneesInstructionVideo",
+        uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
+        detector: "HighKnees",
+        exerciseClosure: null,
+      ),
+      SMKitExercise(
+        prettyName: "Plank",
+        totalSeconds: 30,
         exerciseIntro: null,
-        totalSeconds: 20,
-        videoInstruction: "StandingHamstringMobilityInstructionVideo",
-        uiElements: [SMKitUIElement.timer, SMKitUIElement.gaugeOfMotion],
-        detector: "StandingHamstringMobility",
+        videoInstruction: "PlankHighStaticInstructionVideo",
+        uiElements: [SMKitUIElement.gaugeOfMotion, SMKitUIElement.timer],
+        detector: "PlankHighStatic",
+        exerciseClosure: "",
+      ),
+    ];
+
+    return SMKitWorkout(
+      id: "50",
+      name: "demo workout",
+      workoutIntro: introURL,
+      soundTrack: null,
+      exercises: exercises,
+      getInFrame: null,
+      bodycalFinished: null,
+      workoutClosure: null,
+    );
+  }
+
+  Future<SMKitWorkout> getDemoAssessment() async {
+    var introURL = await getFileUrl("customWorkoutIntro.mp3");
+    var highKneesIntroURL =
+        "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3";
+
+    List<SMKitExercise> exercises = [
+      SMKitExercise(
+        prettyName: "Squat Regular",
+        exerciseIntro: null,
+        totalSeconds: 10,
+        videoInstruction:
+            "SquatRegularInstructionVideo",
+        uiElements: [SMKitUIElement.timer, SMKitUIElement.gaugeOfMotion, SMKitUIElement.repsCounter],
+        detector: "SquatRegular",
         exerciseClosure: "",
         scoringParams: ScoringParams(
-          type: ScoringType.time,
+          type: ScoringType.reps,
           scoreFactor: 0.5,
           targetReps: 3,
-          targetTime: 20,
+          targetTime: 0,
+          targetRom: "",
+        ),
+      ),
+      SMKitExercise(
+        prettyName: "Rest",
+        exerciseIntro: null,
+        totalSeconds: 10,
+        videoInstruction:
+            "Rest",
+        uiElements: [SMKitUIElement.timer, SMKitUIElement.gaugeOfMotion, SMKitUIElement.repsCounter],
+        detector: "Rest",
+        exerciseClosure: "",
+        scoringParams: ScoringParams(
+          type: ScoringType.reps,
+          scoreFactor: 0.5,
+          targetReps: 3,
+          targetTime: 0,
           targetRom: "",
         ),
       ),
       SMKitExercise(
         prettyName: "SquatRegularOverheadStatic",
-        totalSeconds: 30,
+        totalSeconds: 10,
         exerciseIntro: null,
         videoInstruction: "SquatRegularOverheadStaticInstructionVideo",
         uiElements: [SMKitUIElement.gaugeOfMotion, SMKitUIElement.timer],
@@ -468,4 +586,4 @@ class _MyAppState extends State<MyApp> {
       workoutClosure: null,
     );
   }
-  }
+}
