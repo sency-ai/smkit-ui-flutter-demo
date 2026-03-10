@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 import 'package:flutter_smkit_ui/models/smkit_ui_config.dart';
@@ -524,18 +526,20 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           _buildSectionHeader('Session'),
-          _buildToggleRow(
-            label: 'Allow Audio Mixing',
-            subtitle: 'Mix workout audio with external apps',
-            value: _allowAudioMixing,
-            onChanged: (v) => setState(() => _allowAudioMixing = v),
-          ),
-          _buildToggleRow(
-            label: 'Show External Audio Control',
-            subtitle: 'Display in-session audio source button',
-            value: _showExternalAudioControl,
-            onChanged: (v) => setState(() => _showExternalAudioControl = v),
-          ),
+          if (!Platform.isAndroid) ...[
+            _buildToggleRow(
+              label: 'Allow Audio Mixing',
+              subtitle: 'Mix workout audio with external apps',
+              value: _allowAudioMixing,
+              onChanged: (v) => setState(() => _allowAudioMixing = v),
+            ),
+            _buildToggleRow(
+              label: 'Show External Audio Control',
+              subtitle: 'Display in-session audio source button',
+              value: _showExternalAudioControl,
+              onChanged: (v) => setState(() => _showExternalAudioControl = v),
+            ),
+          ],
           _buildToggleRow(
             label: 'Intelligence Rest',
             subtitle: 'Show AI-powered fatigue rest suggestions',

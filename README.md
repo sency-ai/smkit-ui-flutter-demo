@@ -7,10 +7,14 @@ To use SMKitUI in your project, add these dependencies to your application in yo
 
 ```yaml
 dependencies:
-  flutter_smkit_ui: ^1.4.0
+  flutter_smkit_ui: ^1.4.1
 ```
 
 ## 🆕 What's New
+
+### v1.4.1 - setConfig, Instruction Video, Workout From Program & Native SDK Upgrades
+
+- **New**: `InstructionVideoConfig` — `displayMode` (`defaultMode` / `mediumCycle`), `mediumSizeCycles` (1–5). See comment in `lib/main.dart` for all options.
 
 ### v1.4.0 - Skeleton Customization, Pause Menu & Native SDK Upgrades
 
@@ -98,7 +102,6 @@ _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
 To initialize SMKitUI in your app, use the dedicated Flutter plugin:
 
 ```dart
-import 'package:flutter_smkit_ui/flutter_smkit_ui_plugin.dart';
 
 final _smkitUiFlutterPlugin = SmkitUiFlutterPlugin();
 await _smkitUiFlutterPlugin.configure(key: "YOUR_AUTH_KEY");
@@ -154,6 +157,8 @@ You can customize the SDK behavior using setters before starting an assessment o
 Customize the SDK UI through the `modifications` parameter when starting assessments or workouts.
 
 **Phone Calibration**: Control the phone calibration screen.
+
+**Instruction video configuration**: Use `setConfig` with `instructionVideoConfig: InstructionVideoConfig(displayMode: ..., mediumSizeCycles: 1–5)`. See the commented example in `lib/main.dart` for all options.
 
 See the relevant guide for details.
 
