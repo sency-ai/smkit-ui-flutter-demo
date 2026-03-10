@@ -10,10 +10,11 @@ import 'WorkoutResultScreen.dart';
 import 'UISettingsScreen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_smkit_ui/models/smkit_ui_config.dart';
+import 'package:flutter_smkit_ui/models/workout_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: ".env", isOptional: true);
   runApp(const MyApp());
 }
 
@@ -40,6 +41,15 @@ class _MyAppState extends State<MyApp> {
   bool _allowAudioMixing = false;
   bool _showExternalAudioControl = false;
   bool _enableIntelligenceRest = false;
+
+  // Workout From Program
+  bool _showWFPUI = false;
+  final _wfpProgramIdController = TextEditingController(text: '');
+  final _wfpWeekController = TextEditingController(text: '1');
+  WorkoutDuration _wfpDuration = WorkoutDuration.long;
+  BodyZone _wfpBodyZone = BodyZone.fullBody;
+  SencySupportedLanguage _wfpLanguage = SencySupportedLanguage.english;
+  DifficultyLevel _wfpDifficulty = DifficultyLevel.lowDifficulty;
 
   // Color customization - using default 'green' theme
   final String selectedTheme = 'green';
@@ -74,7 +84,7 @@ class _MyAppState extends State<MyApp> {
   void _handleWorkoutResult() {
     if (workoutResultNotifier.value.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Future.delayed(Duration(seconds: 1), () {
+        Future.delayed(const Duration(seconds: 1), () {
           _navigateToWorkoutResult();
         });
       });
@@ -89,6 +99,34 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     );
+  }
+
+  /// Shared result handling for all flows (assessment, workout, WFP).
+  void _handleStatus(SMKitStatus status) {
+    if (status.operation == SMKitOperation.assessmentSummaryData ||
+        status.operation == SMKitOperation.workoutSummaryData) {
+      if (status.data != null) {
+        workoutResultNotifier.value = status.data.toString();
+      }
+    } else if (status.operation == SMKitOperation.error) {
+      String message = 'Unknown error';
+      if (status.data != null) {
+        if (status.data is SMKitError) {
+          message = (status.data as SMKitError).error ?? message;
+        } else {
+          message = status.data.toString();
+        }
+      }
+      _showErrorDialog(message);
+    }
+  }
+
+  @override
+  void dispose() {
+    _wfpProgramIdController.dispose();
+    _wfpWeekController.dispose();
+    workoutResultNotifier.removeListener(_handleWorkoutResult);
+    super.dispose();
   }
 
   // Build modifications map with default customization settings
@@ -112,17 +150,36 @@ class _MyAppState extends State<MyApp> {
     // setState to update our non-existent appearance.
     if (!mounted) return;
 
-    _smkitUiFlutterPlugin.configure(key: apiPublicKey).then(
-          (result) => {
-            setState(() {
-              isConfigured = result == true;
-            })
-          },
-        );
+    _smkitUiFlutterPlugin.configure(key: apiPublicKey).then((result) {
+      if (mounted) setState(() => isConfigured = result == true);
+    });
+
+    // Optional: set instruction video cycle (see options below)
+    // await _smkitUiFlutterPlugin.setConfig(
+    //   config: SMKitConfig(
+    //     instructionVideoConfig: InstructionVideoConfig(
+    //       displayMode: InstructionVideoDisplayMode.mediumCycle,
+    //       mediumSizeCycles: 2,
+    //     ),
+    //   ),
+    // );
+    // displayMode: InstructionVideoDisplayMode.defaultMode | InstructionVideoDisplayMode.mediumCycle
+    // mediumSizeCycles: 1–5 (used when displayMode is mediumCycle)
+
+    // Optional: default intelligence rest (matches RN demo)
+    _smkitUiFlutterPlugin.setConfig(
+      config: const SMKitConfig(enableIntelligenceRest: true),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_showWFPUI) {
+      return MaterialApp(
+        navigatorKey: _navigatorKey,
+        home: _buildWFPScreen(),
+      );
+    }
     return MaterialApp(
       navigatorKey: _navigatorKey,
       home: Scaffold(
@@ -211,20 +268,7 @@ class _MyAppState extends State<MyApp> {
                               },
                               showSummary: showSummary,
                               modifications: currentModifications,
-                              onHandle: (status) {
-                                debugPrint(
-                                    '_startWorkout status: ${status.operation} ${status.data}');
-                                if (status.operation ==
-                                        SMKitOperation.exerciseData &&
-                                    status.data != null) {
-                                  final workoutResult = status.data;
-                                  debugPrint(
-                                      '_startWorkout workoutResult: $workoutResult');
-                                  if (workoutResult == null) {
-                                    return;
-                                  }
-                                }
-                              },
+                              onHandle: _handleStatus,
                             );
                           },
                           child: const Text('Start Sency Assessment'),
@@ -256,31 +300,25 @@ class _MyAppState extends State<MyApp> {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            // Add logic to handle custom assessment with assessmentId
                             debugPrint('Custom Assessment ID: $assessmentId');
-
                             _smkitUiFlutterPlugin.startAssessment(
                               type: AssessmentTypes.custom,
                               assessmentID:
                                   assessmentId == "" ? null : assessmentId,
                               modifications: currentModifications,
-                              onHandle: (status) {
-                                debugPrint(
-                                    '_startWorkout status: ${status.operation} ${status.data}');
-                                if (status.operation ==
-                                        SMKitOperation.exerciseData &&
-                                    status.data != null) {
-                                  final workoutResult = status.data;
-                                  debugPrint(
-                                      '_startWorkout workoutResult: $workoutResult');
-                                  if (workoutResult == null) {
-                                    return;
-                                  }
-                                }
-                              },
+                              onHandle: _handleStatus,
                             );
                           },
                           child: const Text('Custom Assessment'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() => _showWFPUI = true);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[600],
+                          ),
+                          child: const Text('Workout From Program'),
                         ),
                       ],
                     )
@@ -298,25 +336,192 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  Widget _buildWFPScreen() {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Workout From Program')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Program ID', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              TextField(
+                controller: _wfpProgramIdController,
+                decoration: const InputDecoration(
+                  hintText: 'Program name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Week', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              TextField(
+                controller: _wfpWeekController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  hintText: 'Week number',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Duration', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Text('Long'),
+                      selected: _wfpDuration == WorkoutDuration.long,
+                      onSelected: (_) => setState(() => _wfpDuration = WorkoutDuration.long),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Text('Short'),
+                      selected: _wfpDuration == WorkoutDuration.short,
+                      onSelected: (_) => setState(() => _wfpDuration = WorkoutDuration.short),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Body Zone', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Upper Body'),
+                    selected: _wfpBodyZone == BodyZone.upperBody,
+                    onSelected: (_) => setState(() => _wfpBodyZone = BodyZone.upperBody),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Lower Body'),
+                    selected: _wfpBodyZone == BodyZone.lowerBody,
+                    onSelected: (_) => setState(() => _wfpBodyZone = BodyZone.lowerBody),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Full Body'),
+                    selected: _wfpBodyZone == BodyZone.fullBody,
+                    onSelected: (_) => setState(() => _wfpBodyZone = BodyZone.fullBody),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Language', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Text('Hebrew'),
+                      selected: _wfpLanguage == SencySupportedLanguage.hebrew,
+                      onSelected: (_) => setState(() => _wfpLanguage = SencySupportedLanguage.hebrew),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Text('English'),
+                      selected: _wfpLanguage == SencySupportedLanguage.english,
+                      onSelected: (_) => setState(() => _wfpLanguage = SencySupportedLanguage.english),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Difficulty', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Low'),
+                    selected: _wfpDifficulty == DifficultyLevel.lowDifficulty,
+                    onSelected: (_) => setState(() => _wfpDifficulty = DifficultyLevel.lowDifficulty),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Mid'),
+                    selected: _wfpDifficulty == DifficultyLevel.midDifficulty,
+                    onSelected: (_) => setState(() => _wfpDifficulty = DifficultyLevel.midDifficulty),
+                  ),
+                  ChoiceChip(
+                    label: const Text('High'),
+                    selected: _wfpDifficulty == DifficultyLevel.highDifficulty,
+                    onSelected: (_) => setState(() => _wfpDifficulty = DifficultyLevel.highDifficulty),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: startWorkoutProgramSession,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text('Start'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() => _showWFPUI = false);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[600]),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text('Back'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> startWorkoutProgramSession() async {
+    try {
+      final weekStr = _wfpWeekController.text.trim();
+      final week = int.tryParse(weekStr);
+      if (week == null || week < 1) {
+        _showErrorDialog('Invalid week. Please enter a positive number.');
+        return;
+      }
+      final programId = _wfpProgramIdController.text.trim();
+      if (programId.isEmpty) {
+        _showErrorDialog('Please enter a Program ID.');
+        return;
+      }
+      final smkitLang = _wfpLanguage == SencySupportedLanguage.hebrew
+          ? SMKitLanguage.hebrew
+          : SMKitLanguage.english;
+      _smkitUiFlutterPlugin.setSessionLanguage(language: smkitLang);
+      final config = WorkoutConfig(
+        programId: programId,
+        week: week,
+        bodyZone: _wfpBodyZone,
+        difficultyLevel: _wfpDifficulty,
+        workoutDuration: _wfpDuration,
+        language: _wfpLanguage,
+      );
+      await _smkitUiFlutterPlugin.startWorkoutProgram(
+        config: config,
+        modifications: currentModifications,
+        onHandle: _handleStatus,
+      );
+    } catch (e) {
+      _showErrorDialog('Unable to start workout program: $e');
+    }
+  }
+
   void startCustomizedWorkout() async {
     var workout = await getDemoWorkout();
-
     _smkitUiFlutterPlugin.startCustomizedWorkout(
       workout: workout,
       modifications: currentModifications,
-      onHandle: (status) {
-        debugPrint('_startWorkout status: ${status.operation} ${status.data}');
-        if (status.operation == SMKitOperation.exerciseData &&
-            status.data != null) {
-          final workoutResult = status.data as SMCustomWorkoutData;
-          debugPrint(
-              '_startWorkout assessmentSummaryData: ${workoutResult.toString()}');
-
-          if (workoutResult == null) {
-            return;
-          }
-        }
-      },
+      onHandle: _handleStatus,
     );
   }
 
@@ -344,80 +549,9 @@ class _MyAppState extends State<MyApp> {
       _smkitUiFlutterPlugin.startCustomizedAssessment(
           assessment: assessment,
           modifications: currentModifications,
-          onHandle: (status) {
-            debugPrint('📊 Assessment status: ${status.operation}');
+          onHandle: _handleStatus);
 
-            // Handle SUCCESS case
-            if (status.operation == SMKitOperation.assessmentSummaryData &&
-                status.data != null) {
-              final workoutResult = status.data as SMKitAssessmentSummaryData;
-              debugPrint('✅ Assessment completed');
-              debugPrint('📊 ASSESSMENT SUMMARY DATA:');
-              debugPrint('════════════════════════════════════════');
-              debugPrint('Session ID: ${workoutResult.sessionId}');
-              debugPrint('Activity Type: ${workoutResult.activityType}');
-              debugPrint('Start Time: ${workoutResult.startTime}');
-              debugPrint('End Time: ${workoutResult.endTime}');
-              debugPrint('Total Time: ${workoutResult.totalTime}');
-              debugPrint('Total Score: ${workoutResult.totalScore}');
-              debugPrint('Total Score Segmented: ${workoutResult.totalScoreSegmented}');
-              debugPrint('User Data: ${workoutResult.userData}');
-              debugPrint('Number of Exercises: ${workoutResult.exercises.length}');
-              debugPrint('────────────────────────────────────────');
-              for (int i = 0; i < workoutResult.exercises.length; i++) {
-                final exercise = workoutResult.exercises[i];
-                debugPrint('Exercise ${i + 1}:');
-                debugPrint('  Exercise ID: ${exercise.exerciseInfo?.exerciseID}');
-                debugPrint('  Pretty Name: ${exercise.exerciseInfo?.prettyName}');
-                debugPrint('  Total Score: ${exercise.totalScore}');
-                debugPrint('  Performance Score: ${exercise.performanceScore}');
-                debugPrint('  Technique Score: ${exercise.techniqueScore}');
-                debugPrint('  Reps Performed: ${exercise.repsPerformed}');
-                debugPrint('  UI Elements: ${exercise.exerciseInfo?.uiElements}');
-                debugPrint('  Instruction Video: ${exercise.exerciseInfo?.instructionVideo}');
-                debugPrint('  Voice Intro: ${exercise.exerciseInfo?.voiceIntro}');
-                debugPrint('  Voice Outro: ${exercise.exerciseInfo?.voiceOutro}');
-                debugPrint('  Scoring Params: ${exercise.exerciseInfo?.scoringParams?.toString()}');
-                debugPrint('  Feedbacks: ${exercise.feedbacks}');
-              }
-              debugPrint('════════════════════════════════════════');
-              debugPrint('Full toString: ${workoutResult.toString()}');
-              debugPrint('════════════════════════════════════════');
-              setState(() {
-                workoutResultNotifier.value = workoutResult.toString();
-              });
-            }
-            // Handle ERROR case
-            else if (status.operation == SMKitOperation.error) {
-              String errorMessage = 'Unknown error occurred';
-
-              if (status.data != null) {
-                try {
-                  if (status.data is String) {
-                    errorMessage = status.data as String;
-                    if (errorMessage.startsWith('{"error"')) {
-                      final match = RegExp(r'"error":\s*"([^"]*)"').firstMatch(errorMessage);
-                      if (match != null) {
-                        errorMessage = match.group(1) ?? errorMessage;
-                      }
-                    }
-                  } else if (status.data is SMKitError) {
-                    final error = status.data as SMKitError;
-                    errorMessage = error.error ?? 'SMKit error occurred';
-                  } else {
-                    errorMessage = status.data.toString();
-                  }
-                } catch (e) {
-                  errorMessage = 'Error parsing response: ${status.data}';
-                }
-              }
-
-              debugPrint('❌ Assessment error: $errorMessage');
-              _showErrorDialog(errorMessage);
-            }
-          });
-
-    } catch (e, stackTrace) {
+    } catch (e) {
       debugPrint('❌ Exception in startCustomizedAssessment: $e');
       _showErrorDialog('Exception occurred: $e');
     }
