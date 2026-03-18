@@ -8,6 +8,7 @@ import 'package:flutter_smkit_ui/models/smkit_ui_handlers.dart';
 import 'package:path_provider/path_provider.dart';
 import 'WorkoutResultScreen.dart';
 import 'UISettingsScreen.dart';
+import 'WorkoutBuilderScreen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_smkit_ui/models/smkit_ui_config.dart';
 import 'package:flutter_smkit_ui/models/workout_config.dart';
@@ -151,7 +152,10 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     _smkitUiFlutterPlugin.configure(key: apiPublicKey).then((result) {
-      if (mounted) setState(() => isConfigured = result == true);
+      if (mounted) {
+        setState(() => isConfigured = result == true);
+        if (result == true) _applyIntelligenceRestConfig();
+      }
     });
 
     // Optional: set instruction video cycle (see options below)
@@ -165,10 +169,13 @@ class _MyAppState extends State<MyApp> {
     // );
     // displayMode: InstructionVideoDisplayMode.defaultMode | InstructionVideoDisplayMode.mediumCycle
     // mediumSizeCycles: 1–5 (used when displayMode is mediumCycle)
+  }
 
-    // Optional: default intelligence rest (matches RN demo)
+  /// Applies current intelligence rest setting to the native SDK. Call after
+  /// configure and before starting any workout/assessment so rest suggestions work.
+  void _applyIntelligenceRestConfig() {
     _smkitUiFlutterPlugin.setConfig(
-      config: const SMKitConfig(enableIntelligenceRest: true),
+      config: SMKitConfig(enableIntelligenceRest: _enableIntelligenceRest),
     );
   }
 
@@ -260,6 +267,7 @@ class _MyAppState extends State<MyApp> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () {
+                            _applyIntelligenceRestConfig();
                             _smkitUiFlutterPlugin.startAssessment(
                               type: selectedAssessmentType,
                               userData: {
@@ -275,9 +283,18 @@ class _MyAppState extends State<MyApp> {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            startCustomizedWorkout();
+                            _navigatorKey.currentState?.push(
+                              MaterialPageRoute(
+                                builder: (_) => WorkoutBuilderScreen(
+                                  plugin: _smkitUiFlutterPlugin,
+                                  modifications: currentModifications,
+                                  enableIntelligenceRest: _enableIntelligenceRest,
+                                  onHandle: _handleStatus,
+                                ),
+                              ),
+                            );
                           },
-                          child: const Text('Customized Workout'),
+                          child: const Text('Build Workout'),
                         ),
                         ElevatedButton(
                           onPressed: () {
@@ -301,6 +318,7 @@ class _MyAppState extends State<MyApp> {
                         ElevatedButton(
                           onPressed: () {
                             debugPrint('Custom Assessment ID: $assessmentId');
+                            _applyIntelligenceRestConfig();
                             _smkitUiFlutterPlugin.startAssessment(
                               type: AssessmentTypes.custom,
                               assessmentID:
@@ -498,6 +516,7 @@ class _MyAppState extends State<MyApp> {
           ? SMKitLanguage.hebrew
           : SMKitLanguage.english;
       _smkitUiFlutterPlugin.setSessionLanguage(language: smkitLang);
+      _applyIntelligenceRestConfig();
       final config = WorkoutConfig(
         programId: programId,
         week: week,
@@ -517,6 +536,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void startCustomizedWorkout() async {
+    _applyIntelligenceRestConfig();
     var workout = await getDemoWorkout();
     _smkitUiFlutterPlugin.startCustomizedWorkout(
       workout: workout,
@@ -544,6 +564,7 @@ class _MyAppState extends State<MyApp> {
       _smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly);
       _smkitUiFlutterPlugin.setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased);
 
+      _applyIntelligenceRestConfig();
       debugPrint('🚀 Starting assessment with theme: $selectedTheme...');
 
       _smkitUiFlutterPlugin.startCustomizedAssessment(
