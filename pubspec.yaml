@@ -1,7 +1,7 @@
 name: smkit_ui_flutter_demo_app
 description: "Demonstrates how to use the smkit_ui_flutter_plugin plugin."
 publish_to: "none"
-version: 1.4.1+1
+version: 1.4.3+1
 
 environment:
   sdk: ^3.5.0
@@ -9,8 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_smkit_ui:
-    path: ../smkit_ui_bridge_lib/flutter_smkit_ui
+  # Use published Flutter SMKitUI SDK 1.4.1 to mirror customer setup
+  flutter_smkit_ui: 1.4.3
   path_provider: ^2.0.11
   cupertino_icons: ^1.0.6
   flutter_dotenv: ^5.1.0
