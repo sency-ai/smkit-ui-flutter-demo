@@ -150,13 +150,33 @@ class _MyAppState extends State<MyApp> {
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.
     if (!mounted) return;
+    if (apiPublicKey.trim().isEmpty) {
+      debugPrint('❌ API_PUBLIC_KEY is missing or empty');
+      setState(() => isConfigured = false);
+      return;
+    }
 
-    _smkitUiFlutterPlugin.configure(key: apiPublicKey).then((result) {
-      if (mounted) {
-        setState(() => isConfigured = result == true);
-        if (result == true) _applyIntelligenceRestConfig();
-      }
-    });
+    debugPrint('⏳ Configuring SMKitUI...');
+    final result = await _smkitUiFlutterPlugin.configure(
+      key: apiPublicKey,
+      // Android only: force a specific pose model instead of the adaptive default.
+      // Options: SmKitPoseModelChoice.prime | .pro | .lite | .ultraLite | .basic
+      // Example: poseModelChoice: SmKitPoseModelChoice.pro,
+      // iOS ignores this value — it uses accuratePoseEstimation (bool) in setConfig instead.
+    );
+    if (!mounted) return;
+
+    final ok = result == true;
+    debugPrint('✅ SMKitUI configure result: $result');
+    setState(() => isConfigured = ok);
+
+    if (ok) {
+      _applyIntelligenceRestConfig();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showErrorDialog('SMKitUI configuration failed. Please verify API key / connectivity.');
+      });
+    }
 
     // Optional: set instruction video cycle (see options below)
     // await _smkitUiFlutterPlugin.setConfig(
@@ -267,6 +287,10 @@ class _MyAppState extends State<MyApp> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () {
+                            if (!isConfigured) {
+                              _showErrorDialog('Plugin not configured yet. Please wait for configuration to complete.');
+                              return;
+                            }
                             _applyIntelligenceRestConfig();
                             _smkitUiFlutterPlugin.startAssessment(
                               type: selectedAssessmentType,
@@ -317,6 +341,10 @@ class _MyAppState extends State<MyApp> {
                         ),
                         ElevatedButton(
                           onPressed: () {
+                            if (!isConfigured) {
+                              _showErrorDialog('Plugin not configured yet. Please wait for configuration to complete.');
+                              return;
+                            }
                             debugPrint('Custom Assessment ID: $assessmentId');
                             _applyIntelligenceRestConfig();
                             _smkitUiFlutterPlugin.startAssessment(

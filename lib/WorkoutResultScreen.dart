@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class WorkoutResultScreen extends StatelessWidget {
   final String workoutResult;
 
-  const WorkoutResultScreen({Key? key, required this.workoutResult}) : super(key: key);
+  const WorkoutResultScreen({super.key, required this.workoutResult});
 
   @override
   Widget build(BuildContext context) {

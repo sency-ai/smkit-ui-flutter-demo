@@ -1,4 +1,3 @@
-import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
@@ -112,16 +111,16 @@ class _SkeletonPreviewPainter extends CustomPainter {
   // Resolve the dot color from preset or override
   Color get _dotColor {
     if (dotsInnerColor != null) {
-      return (_skeletonColors[dotsInnerColor!] ?? Colors.white).withOpacity(dotsOpacity.clamp(0, 1));
+      return (_skeletonColors[dotsInnerColor!] ?? Colors.white).withValues(alpha: dotsOpacity.clamp(0.0, 1.0).toDouble());
     }
-    return _presetDotColor.withOpacity(dotsOpacity.clamp(0, 1));
+    return _presetDotColor.withValues(alpha: dotsOpacity.clamp(0.0, 1.0).toDouble());
   }
 
   Color get _lineColor {
     if (connectionsInnerColor != null) {
-      return (_skeletonColors[connectionsInnerColor!] ?? Colors.white).withOpacity(connectionsOpacity.clamp(0, 1));
+      return (_skeletonColors[connectionsInnerColor!] ?? Colors.white).withValues(alpha: connectionsOpacity.clamp(0.0, 1.0).toDouble());
     }
-    return _presetLineColor.withOpacity(connectionsOpacity.clamp(0, 1));
+    return _presetLineColor.withValues(alpha: connectionsOpacity.clamp(0.0, 1.0).toDouble());
   }
 
   Color get _presetDotColor {
@@ -526,20 +525,18 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           _buildSectionHeader('Session'),
-          if (!Platform.isAndroid) ...[
-            _buildToggleRow(
-              label: 'Allow Audio Mixing',
-              subtitle: 'Mix workout audio with external apps',
-              value: _allowAudioMixing,
-              onChanged: (v) => setState(() => _allowAudioMixing = v),
-            ),
-            _buildToggleRow(
-              label: 'Show External Audio Control',
-              subtitle: 'Display in-session audio source button',
-              value: _showExternalAudioControl,
-              onChanged: (v) => setState(() => _showExternalAudioControl = v),
-            ),
-          ],
+          _buildToggleRow(
+            label: 'Allow Audio Mixing',
+            subtitle: 'Mix workout audio with external apps',
+            value: _allowAudioMixing,
+            onChanged: (v) => setState(() => _allowAudioMixing = v),
+          ),
+          _buildToggleRow(
+            label: 'Show External Audio Control',
+            subtitle: 'Display in-session audio source button',
+            value: _showExternalAudioControl,
+            onChanged: (v) => setState(() => _showExternalAudioControl = v),
+          ),
           _buildToggleRow(
             label: 'Intelligence Rest',
             subtitle: 'Show AI-powered fatigue rest suggestions',
@@ -691,7 +688,7 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
         onTap: () => setState(() => _preset = p),
         child: Container(
           height: 44,
-          color: selected ? Colors.blue.withOpacity(0.15) : Colors.transparent,
+          color: selected ? Colors.blue.withValues(alpha: 0.15) : Colors.transparent,
           child: Row(
             children: [
               SizedBox(
@@ -727,7 +724,7 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
         onTap: () => setState(() => _connectionStyle = s),
         child: Container(
           height: 44,
-          color: selected ? Colors.blue.withOpacity(0.15) : Colors.transparent,
+          color: selected ? Colors.blue.withValues(alpha: 0.15) : Colors.transparent,
           child: Row(
             children: [
               SizedBox(
@@ -763,7 +760,7 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
         onTap: () => setState(() => _jointShape = s),
         child: Container(
           height: 44,
-          color: selected ? Colors.blue.withOpacity(0.15) : Colors.transparent,
+          color: selected ? Colors.blue.withValues(alpha: 0.15) : Colors.transparent,
           child: Row(
             children: [
               SizedBox(
