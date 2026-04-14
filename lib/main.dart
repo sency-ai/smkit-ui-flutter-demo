@@ -3,22 +3,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
-import 'package:flutter_smkit_ui/models/sm_workout.dart';
-import 'package:flutter_smkit_ui/models/smkit_ui_handlers.dart';
 import 'package:path_provider/path_provider.dart';
 import 'WorkoutResultScreen.dart';
 import 'UISettingsScreen.dart';
+import 'AssessmentBuilderScreen.dart';
 import 'WorkoutBuilderScreen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_smkit_ui/models/smkit_ui_config.dart';
-import 'package:flutter_smkit_ui/models/workout_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env", isOptional: true);
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -133,7 +129,8 @@ class _MyAppState extends State<MyApp> {
   // Build modifications map with default customization settings
   Map<String, dynamic> buildModifications() {
     return {
-      'primaryColor': themePrimaryColors[selectedTheme] ?? themePrimaryColors['green']!,
+      'primaryColor':
+          themePrimaryColors[selectedTheme] ?? themePrimaryColors['green']!,
       'phoneCalibration': {
         'enabled': phoneCalibrationEnabled,
         'autoCalibrate': autoCalibrate,
@@ -174,7 +171,8 @@ class _MyAppState extends State<MyApp> {
       _applyIntelligenceRestConfig();
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showErrorDialog('SMKitUI configuration failed. Please verify API key / connectivity.');
+        _showErrorDialog(
+            'SMKitUI configuration failed. Please verify API key / connectivity.');
       });
     }
 
@@ -261,16 +259,21 @@ class _MyAppState extends State<MyApp> {
                         const SizedBox(height: 8),
                         ElevatedButton.icon(
                           icon: const Icon(Icons.tune),
-                          label: Text(_skeletonConfig == null ? 'UI Settings' : 'UI Settings ✓'),
+                          label: Text(_skeletonConfig == null
+                              ? 'UI Settings'
+                              : 'UI Settings ✓'),
                           onPressed: () async {
-                            final result = await _navigatorKey.currentState!.push<UISettingsResult>(
+                            final result = await _navigatorKey.currentState!
+                                .push<UISettingsResult>(
                               MaterialPageRoute(
                                 builder: (_) => UISettingsScreen(
                                   plugin: _smkitUiFlutterPlugin,
                                   initialConfig: _skeletonConfig,
                                   initialAllowAudioMixing: _allowAudioMixing,
-                                  initialShowExternalAudioControl: _showExternalAudioControl,
-                                  initialEnableIntelligenceRest: _enableIntelligenceRest,
+                                  initialShowExternalAudioControl:
+                                      _showExternalAudioControl,
+                                  initialEnableIntelligenceRest:
+                                      _enableIntelligenceRest,
                                 ),
                               ),
                             );
@@ -278,8 +281,10 @@ class _MyAppState extends State<MyApp> {
                               setState(() {
                                 _skeletonConfig = result.skeletonConfig;
                                 _allowAudioMixing = result.allowAudioMixing;
-                                _showExternalAudioControl = result.showExternalAudioControl;
-                                _enableIntelligenceRest = result.enableIntelligenceRest;
+                                _showExternalAudioControl =
+                                    result.showExternalAudioControl;
+                                _enableIntelligenceRest =
+                                    result.enableIntelligenceRest;
                               });
                             }
                           },
@@ -288,7 +293,8 @@ class _MyAppState extends State<MyApp> {
                         ElevatedButton(
                           onPressed: () {
                             if (!isConfigured) {
-                              _showErrorDialog('Plugin not configured yet. Please wait for configuration to complete.');
+                              _showErrorDialog(
+                                  'Plugin not configured yet. Please wait for configuration to complete.');
                               return;
                             }
                             _applyIntelligenceRestConfig();
@@ -296,7 +302,8 @@ class _MyAppState extends State<MyApp> {
                               type: selectedAssessmentType,
                               userData: {
                                 'gender': 'Male',
-                                'birthday': DateTime(1990, 1, 1).millisecondsSinceEpoch,
+                                'birthday':
+                                    DateTime(1990, 1, 1).millisecondsSinceEpoch,
                               },
                               showSummary: showSummary,
                               modifications: currentModifications,
@@ -312,7 +319,8 @@ class _MyAppState extends State<MyApp> {
                                 builder: (_) => WorkoutBuilderScreen(
                                   plugin: _smkitUiFlutterPlugin,
                                   modifications: currentModifications,
-                                  enableIntelligenceRest: _enableIntelligenceRest,
+                                  enableIntelligenceRest:
+                                      _enableIntelligenceRest,
                                   onHandle: _handleStatus,
                                 ),
                               ),
@@ -322,7 +330,23 @@ class _MyAppState extends State<MyApp> {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            startCustomizedAssessment();
+                            if (!isConfigured) {
+                              _showErrorDialog(
+                                  'Plugin not configured yet. Please wait for configuration to complete.');
+                              return;
+                            }
+                            _navigatorKey.currentState?.push(
+                              MaterialPageRoute(
+                                builder: (_) => AssessmentBuilderScreen(
+                                  plugin: _smkitUiFlutterPlugin,
+                                  modifications: currentModifications,
+                                  enableIntelligenceRest:
+                                      _enableIntelligenceRest,
+                                  showSummary: showSummary,
+                                  onHandle: _handleStatus,
+                                ),
+                              ),
+                            );
                           },
                           child: const Text('Customized Assessment'),
                         ),
@@ -342,7 +366,8 @@ class _MyAppState extends State<MyApp> {
                         ElevatedButton(
                           onPressed: () {
                             if (!isConfigured) {
-                              _showErrorDialog('Plugin not configured yet. Please wait for configuration to complete.');
+                              _showErrorDialog(
+                                  'Plugin not configured yet. Please wait for configuration to complete.');
                               return;
                             }
                             debugPrint('Custom Assessment ID: $assessmentId');
@@ -391,7 +416,8 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Program ID', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text('Program ID',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
               TextField(
                 controller: _wfpProgramIdController,
@@ -412,7 +438,8 @@ class _MyAppState extends State<MyApp> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('Duration', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text('Duration',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -420,7 +447,8 @@ class _MyAppState extends State<MyApp> {
                     child: ChoiceChip(
                       label: const Text('Long'),
                       selected: _wfpDuration == WorkoutDuration.long,
-                      onSelected: (_) => setState(() => _wfpDuration = WorkoutDuration.long),
+                      onSelected: (_) =>
+                          setState(() => _wfpDuration = WorkoutDuration.long),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -428,13 +456,15 @@ class _MyAppState extends State<MyApp> {
                     child: ChoiceChip(
                       label: const Text('Short'),
                       selected: _wfpDuration == WorkoutDuration.short,
-                      onSelected: (_) => setState(() => _wfpDuration = WorkoutDuration.short),
+                      onSelected: (_) =>
+                          setState(() => _wfpDuration = WorkoutDuration.short),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              const Text('Body Zone', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text('Body Zone',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -442,22 +472,26 @@ class _MyAppState extends State<MyApp> {
                   ChoiceChip(
                     label: const Text('Upper Body'),
                     selected: _wfpBodyZone == BodyZone.upperBody,
-                    onSelected: (_) => setState(() => _wfpBodyZone = BodyZone.upperBody),
+                    onSelected: (_) =>
+                        setState(() => _wfpBodyZone = BodyZone.upperBody),
                   ),
                   ChoiceChip(
                     label: const Text('Lower Body'),
                     selected: _wfpBodyZone == BodyZone.lowerBody,
-                    onSelected: (_) => setState(() => _wfpBodyZone = BodyZone.lowerBody),
+                    onSelected: (_) =>
+                        setState(() => _wfpBodyZone = BodyZone.lowerBody),
                   ),
                   ChoiceChip(
                     label: const Text('Full Body'),
                     selected: _wfpBodyZone == BodyZone.fullBody,
-                    onSelected: (_) => setState(() => _wfpBodyZone = BodyZone.fullBody),
+                    onSelected: (_) =>
+                        setState(() => _wfpBodyZone = BodyZone.fullBody),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              const Text('Language', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text('Language',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -465,7 +499,8 @@ class _MyAppState extends State<MyApp> {
                     child: ChoiceChip(
                       label: const Text('Hebrew'),
                       selected: _wfpLanguage == SencySupportedLanguage.hebrew,
-                      onSelected: (_) => setState(() => _wfpLanguage = SencySupportedLanguage.hebrew),
+                      onSelected: (_) => setState(
+                          () => _wfpLanguage = SencySupportedLanguage.hebrew),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -473,13 +508,15 @@ class _MyAppState extends State<MyApp> {
                     child: ChoiceChip(
                       label: const Text('English'),
                       selected: _wfpLanguage == SencySupportedLanguage.english,
-                      onSelected: (_) => setState(() => _wfpLanguage = SencySupportedLanguage.english),
+                      onSelected: (_) => setState(
+                          () => _wfpLanguage = SencySupportedLanguage.english),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              const Text('Difficulty', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text('Difficulty',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -487,17 +524,20 @@ class _MyAppState extends State<MyApp> {
                   ChoiceChip(
                     label: const Text('Low'),
                     selected: _wfpDifficulty == DifficultyLevel.lowDifficulty,
-                    onSelected: (_) => setState(() => _wfpDifficulty = DifficultyLevel.lowDifficulty),
+                    onSelected: (_) => setState(
+                        () => _wfpDifficulty = DifficultyLevel.lowDifficulty),
                   ),
                   ChoiceChip(
                     label: const Text('Mid'),
                     selected: _wfpDifficulty == DifficultyLevel.midDifficulty,
-                    onSelected: (_) => setState(() => _wfpDifficulty = DifficultyLevel.midDifficulty),
+                    onSelected: (_) => setState(
+                        () => _wfpDifficulty = DifficultyLevel.midDifficulty),
                   ),
                   ChoiceChip(
                     label: const Text('High'),
                     selected: _wfpDifficulty == DifficultyLevel.highDifficulty,
-                    onSelected: (_) => setState(() => _wfpDifficulty = DifficultyLevel.highDifficulty),
+                    onSelected: (_) => setState(
+                        () => _wfpDifficulty = DifficultyLevel.highDifficulty),
                   ),
                 ],
               ),
@@ -514,7 +554,8 @@ class _MyAppState extends State<MyApp> {
                 onPressed: () {
                   setState(() => _showWFPUI = false);
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[600]),
+                style:
+                    ElevatedButton.styleFrom(backgroundColor: Colors.grey[600]),
                 child: const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text('Back'),
@@ -580,7 +621,8 @@ class _MyAppState extends State<MyApp> {
       // Check if plugin is configured
       if (!isConfigured) {
         debugPrint('❌ Plugin not configured yet');
-        _showErrorDialog('Plugin not configured yet. Please wait for configuration to complete.');
+        _showErrorDialog(
+            'Plugin not configured yet. Please wait for configuration to complete.');
         return;
       }
 
@@ -589,8 +631,10 @@ class _MyAppState extends State<MyApp> {
 
       // Set session preferences (fire-and-forget)
       _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
-      _smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly);
-      _smkitUiFlutterPlugin.setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased);
+      _smkitUiFlutterPlugin.setCounterPreferences(
+          counterPreferences: SMKitCounterPreferences.perfectOnly);
+      _smkitUiFlutterPlugin.setEndExercisePreferences(
+          endExercisePrefernces: SMKitEndExercisePreferences.targetBased);
 
       _applyIntelligenceRestConfig();
       debugPrint('🚀 Starting assessment with theme: $selectedTheme...');
@@ -599,7 +643,6 @@ class _MyAppState extends State<MyApp> {
           assessment: assessment,
           modifications: currentModifications,
           onHandle: _handleStatus);
-
     } catch (e) {
       debugPrint('❌ Exception in startCustomizedAssessment: $e');
       _showErrorDialog('Exception occurred: $e');
@@ -706,9 +749,12 @@ class _MyAppState extends State<MyApp> {
         prettyName: "Squat Regular",
         exerciseIntro: null,
         totalSeconds: 10,
-        videoInstruction:
-            "SquatRegularInstructionVideo",
-        uiElements: [SMKitUIElement.timer, SMKitUIElement.gaugeOfMotion, SMKitUIElement.repsCounter],
+        videoInstruction: "SquatRegularInstructionVideo",
+        uiElements: [
+          SMKitUIElement.timer,
+          SMKitUIElement.gaugeOfMotion,
+          SMKitUIElement.repsCounter
+        ],
         detector: "SquatRegular",
         exerciseClosure: "",
         scoringParams: ScoringParams(
@@ -723,9 +769,12 @@ class _MyAppState extends State<MyApp> {
         prettyName: "Rest",
         exerciseIntro: null,
         totalSeconds: 10,
-        videoInstruction:
-            "Rest",
-        uiElements: [SMKitUIElement.timer, SMKitUIElement.gaugeOfMotion, SMKitUIElement.repsCounter],
+        videoInstruction: "Rest",
+        uiElements: [
+          SMKitUIElement.timer,
+          SMKitUIElement.gaugeOfMotion,
+          SMKitUIElement.repsCounter
+        ],
         detector: "Rest",
         exerciseClosure: "",
         scoringParams: ScoringParams(
