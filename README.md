@@ -7,8 +7,10 @@ To use SMKitUI in your project, add these dependencies to your application in yo
 
 ```yaml
 dependencies:
-  flutter_smkit_ui: ^1.4.6
+  flutter_smkit_ui: ^1.4.7
 ```
+
+This demo targets iOS `SMKitUI`/`SMKit` `1.8.3` and Android `com.sency.smkitui:smkitui`/`com.sency.smkit:smkit` `1.6.4`.
 ### Setup
 
 - [Android Setup](docs/android-setup.md)
@@ -81,4 +83,4 @@ See the relevant guide for details.
 
 ## Migration from Previous Versions
 
-If you're upgrading from an earlier version, please see the [Migration Guide v1.4.0](docs/migration-v1.4.0.md) for the latest upgrade instructions, including skeleton customization, pause menu configuration, and the native SDK 1.5.0 upgrades.
+If you're upgrading from an earlier version, please see the [Migration Guide v1.4.0](docs/migration-v1.4.0.md) for the latest upgrade instructions, including skeleton customization, pause menu configuration, and the native SDK upgrades.

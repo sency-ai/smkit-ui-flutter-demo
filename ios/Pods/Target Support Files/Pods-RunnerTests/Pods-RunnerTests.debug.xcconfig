@@ -9,7 +9,7 @@ LD_RUNPATH_SEARCH_PATHS = $(inherited) /usr/lib/swift
 LIBRARY_SEARCH_PATHS = $(inherited) $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)/ $(SDKROOT)/usr/lib/swift
 OTHERCFLAGS[sdk=iphoneos*] = $(inherited) -iframework "$(PODS_ROOT)/SMBase"
 OTHERCFLAGS[sdk=iphonesimulator*] = $(inherited) -iframework "$(PODS_ROOT)/SMBase"
-OTHER_LDFLAGS = $(inherited) -framework "SMBase" -framework "SMKit" -framework "SMKitUI" -framework "UIKit" -framework "ZIPFoundation" -framework "flutter_smkit_ui" -framework "integration_test" -framework "path_provider_foundation"
+OTHER_LDFLAGS = $(inherited) -framework "SMBase" -framework "SMKit" -framework "SMKitUI" -framework "Speech" -framework "UIKit" -framework "ZIPFoundation" -framework "flutter_smkit_ui" -framework "integration_test" -framework "path_provider_foundation"
 OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) -framework SMBase
 OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -framework SMBase
 PODS_BUILD_DIR = ${BUILD_DIR}
