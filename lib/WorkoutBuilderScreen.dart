@@ -1,29 +1,99 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
-import 'package:path_provider/path_provider.dart';
 
+import 'demo_settings.dart';
 import 'exercise_catalog.dart';
 
-class _WorkoutExercise {
-  final String detector;
+enum WorkoutPhonePositionChoice { sdkDefault, floor, elevated }
 
-  const _WorkoutExercise({required this.detector});
+enum WorkoutTriStateChoice { sdkDefault, on, off }
+
+class BuiltWorkoutExercise {
+  final int id;
+  String detector;
+  int duration;
+  WorkoutPhonePositionChoice phonePositionChoice;
+  WorkoutTriStateChoice guidanceChoice;
+  WorkoutTriStateChoice wideAngleChoice;
+  bool shortIntro;
+  bool playPreExerciseCountdown;
+  bool playRepMilestoneVoice;
+  int repMilestoneInterval;
+  bool playSoundOnEachRep;
+  bool adaptiveRomFeedbackEnabled;
+  int adaptiveRomWarmupReps;
+  bool stretchSetEnabled;
+  int stretchSetRepetitions;
+  int stretchSetSeconds;
+  int stretchSetRestSeconds;
+
+  BuiltWorkoutExercise({
+    required this.id,
+    required this.detector,
+    required this.duration,
+    this.phonePositionChoice = WorkoutPhonePositionChoice.sdkDefault,
+    this.guidanceChoice = WorkoutTriStateChoice.sdkDefault,
+    this.wideAngleChoice = WorkoutTriStateChoice.sdkDefault,
+    this.shortIntro = false,
+    this.playPreExerciseCountdown = false,
+    this.playRepMilestoneVoice = false,
+    this.repMilestoneInterval = 10,
+    this.playSoundOnEachRep = false,
+    this.adaptiveRomFeedbackEnabled = false,
+    this.adaptiveRomWarmupReps = 2,
+    this.stretchSetEnabled = false,
+    this.stretchSetRepetitions = 3,
+    this.stretchSetSeconds = 8,
+    this.stretchSetRestSeconds = 4,
+  });
+
+  SMKitExercise toExercise() {
+    final entry = ExerciseCatalog.byDetector[detector];
+    final uiElements = entry?.uiElements ?? _fallbackUiElements;
+    return SMKitExercise(
+      prettyName: displayNameForDetector(detector),
+      totalSeconds: duration,
+      videoInstruction:
+          entry?.videoInstruction ?? '${detector}InstructionVideo',
+      uiElements: uiElements,
+      detector: detector,
+      phonePosition: phonePositionChoice.phonePosition,
+      guidanceMode: guidanceChoice.boolValue,
+      useWideAngleCamera: Platform.isIOS ? wideAngleChoice.boolValue : null,
+      shortIntro: shortIntro,
+      playPreExerciseCountdown: playPreExerciseCountdown,
+      playRepMilestoneVoice: playRepMilestoneVoice,
+      repMilestoneInterval: repMilestoneInterval,
+      playSoundOnEachRep: playSoundOnEachRep,
+      adaptiveRomFeedbackEnabled: adaptiveRomFeedbackEnabled,
+      adaptiveRomWarmupReps: adaptiveRomWarmupReps,
+      stretchSetConfig: stretchSetEnabled
+          ? SMKitStretchSetConfig(
+              repetitions: stretchSetRepetitions,
+              secondsPerStretch: stretchSetSeconds,
+              restSecondsBetweenStretches: stretchSetRestSeconds,
+            )
+          : null,
+    );
+  }
+
+  static const _fallbackUiElements = [
+    SMKitUIElement.timer,
+    SMKitUIElement.repsCounter,
+  ];
 }
 
 class WorkoutBuilderScreen extends StatefulWidget {
   final SmkitUiFlutterPlugin plugin;
-  final Map<String, dynamic> modifications;
-  final bool enableIntelligenceRest;
+  final DemoSettings settings;
   final void Function(SMKitStatus) onHandle;
 
   const WorkoutBuilderScreen({
     super.key,
     required this.plugin,
-    required this.modifications,
-    this.enableIntelligenceRest = false,
+    required this.settings,
     required this.onHandle,
   });
 
@@ -32,268 +102,576 @@ class WorkoutBuilderScreen extends StatefulWidget {
 }
 
 class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
-  ExerciseTypeFilter _selectedFilter = ExerciseTypeFilter.all;
-  String? _selectedExercise;
-  final List<_WorkoutExercise> _selectedExercises = [];
+  final _searchController = TextEditingController();
+  final List<BuiltWorkoutExercise> _workoutExercises = [];
+  final List<BuiltWorkoutExercise> _continuationExercises = [];
+  List<String> _availableDetectors = [];
+  bool _loadingExercises = true;
+  int _nextId = 1;
+  int _addTargetIndex = 0;
 
-  List<ExerciseCatalogEntry> get _filteredExercises =>
-      ExerciseCatalog.filteredExercises(_selectedFilter);
+  @override
+  void initState() {
+    super.initState();
+    _loadAvailableExercises();
+  }
 
-  void _chooseExercise() {
-    final exercises = _filteredExercises;
-    if (exercises.isEmpty) {
-      return;
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAvailableExercises() async {
+    List<String> detectors;
+    try {
+      detectors = await widget.plugin.getSupportedMovements() ?? [];
+    } catch (_) {
+      detectors = [];
     }
+    if (detectors.isEmpty) {
+      detectors = ExerciseCatalog.byDetector.keys.toList();
+    }
+    detectors = detectors
+        .where((detector) => detector.toLowerCase() != 'rowing')
+        .toSet()
+        .toList()
+      ..sort((a, b) =>
+          displayNameForDetector(a).compareTo(displayNameForDetector(b)));
+    if (!mounted) return;
+    setState(() {
+      _availableDetectors = detectors;
+      _loadingExercises = false;
+    });
+  }
 
-    int tempIndex = 0;
-    if (_selectedExercise != null) {
-      final currentIndex = exercises.indexWhere(
-        (exercise) => exercise.detector == _selectedExercise,
-      );
-      if (currentIndex >= 0) {
-        tempIndex = currentIndex;
+  List<String> get _filteredDetectors {
+    final query = _searchController.text.trim().toLowerCase();
+    if (query.isEmpty) return _availableDetectors;
+    return _availableDetectors
+        .where(
+          (detector) =>
+              detector.toLowerCase().contains(query) ||
+              displayNameForDetector(detector).toLowerCase().contains(query),
+        )
+        .toList();
+  }
+
+  void _addDetector(String detector) {
+    final item = BuiltWorkoutExercise(
+      id: _nextId++,
+      detector: detector,
+      duration: _defaultDuration(detector),
+    );
+    setState(() {
+      if (widget.settings.enableWorkoutContinuation && _addTargetIndex == 1) {
+        _continuationExercises.add(item);
+      } else {
+        _workoutExercises.add(item);
       }
+    });
+  }
+
+  int _defaultDuration(String detector) {
+    final entry = ExerciseCatalog.byDetector[detector];
+    if (entry?.type == ExerciseTypeFilter.mobility ||
+        entry?.type == ExerciseTypeFilter.bodyAssessment ||
+        entry?.type == ExerciseTypeFilter.static_) {
+      return 10;
     }
+    return 20;
+  }
 
-    final scrollController =
-        FixedExtentScrollController(initialItem: tempIndex);
+  Future<void> _startWorkout() async {
+    if (_workoutExercises.isEmpty) return;
+    await widget.settings.applyTo(widget.plugin);
+    final continuation = widget.settings.enableWorkoutContinuation &&
+            _continuationExercises.isNotEmpty
+        ? SMKitWorkoutContinuation(
+            introSoundKey: null,
+            interactionUnlockSoundKey: '',
+            exercises: _continuationExercises
+                .map((item) => item.toExercise())
+                .toList(),
+          )
+        : null;
+    await widget.plugin.startCustomizedWorkout(
+      workout: SMKitWorkout(
+        id: 'built-workout',
+        name: 'Built Workout',
+        workoutIntro: null,
+        exercises: _workoutExercises.map((item) => item.toExercise()).toList(),
+        continuation: continuation,
+      ),
+      modifications: widget.settings.modifications,
+      onHandle: widget.onHandle,
+    );
+  }
 
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          _selectedFilter == ExerciseTypeFilter.all
-              ? 'Choose Exercise'
-              : 'Choose Exercise (${exerciseFilterLabel(_selectedFilter)})',
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 180,
-          child: ListWheelScrollView.useDelegate(
-            controller: scrollController,
-            itemExtent: 40,
-            diameterRatio: 1.5,
-            onSelectedItemChanged: (index) => tempIndex = index,
-            childDelegate: ListWheelChildBuilderDelegate(
-              childCount: exercises.length,
-              builder: (_, index) => Center(
-                child: Text(
-                  exercises[index].detector,
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ),
-            ),
-          ),
-        ),
+  Future<void> _editExercise(
+    BuiltWorkoutExercise exercise,
+    List<BuiltWorkoutExercise> owner,
+  ) async {
+    final updated = await Navigator.of(context).push<BuiltWorkoutExercise>(
+      MaterialPageRoute(
+        builder: (_) => ExerciseConfigScreen(exercise: exercise),
+      ),
+    );
+    if (updated == null) return;
+    setState(() {
+      final index = owner.indexWhere((item) => item.id == updated.id);
+      if (index >= 0) {
+        owner[index] = updated;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Build Workout'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: _workoutExercises.isEmpty ? null : _startWorkout,
+            child: const Text('Start'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                _selectedExercise = exercises[tempIndex].detector;
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Select'),
+            onPressed:
+                _workoutExercises.isEmpty && _continuationExercises.isEmpty
+                    ? null
+                    : () => setState(() {
+                          _workoutExercises.clear();
+                          _continuationExercises.clear();
+                        }),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                labelText: 'Search SDK exercises',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Enable workout continuation'),
+              value: widget.settings.enableWorkoutContinuation,
+              onChanged: (value) {
+                setState(() {
+                  widget.settings.enableWorkoutContinuation = value;
+                  if (!value) _addTargetIndex = 0;
+                });
+              },
+            ),
+            if (widget.settings.enableWorkoutContinuation)
+              SegmentedButton<int>(
+                segments: const [
+                  ButtonSegment(value: 0, label: Text('Workout')),
+                  ButtonSegment(value: 1, label: Text('Continuation')),
+                ],
+                selected: {_addTargetIndex},
+                onSelectionChanged: (value) =>
+                    setState(() => _addTargetIndex = value.single),
+              ),
+            _selectedSection(
+              title: 'Workout',
+              items: _workoutExercises,
+              emptyText: 'Add at least one exercise to enable Start.',
+            ),
+            if (widget.settings.enableWorkoutContinuation)
+              _selectedSection(
+                title: 'Continuation',
+                items: _continuationExercises,
+                emptyText:
+                    'Continuation exercises run only when continuation is enabled.',
+              ),
+            const SizedBox(height: 16),
+            const Text(
+              'Available exercises',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            if (_loadingExercises)
+              const Center(child: CircularProgressIndicator())
+            else if (_filteredDetectors.isEmpty)
+              const Text('No supported movements found.')
+            else
+              ..._filteredDetectors.map(
+                (detector) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.add_circle_outline),
+                  title: Text(displayNameForDetector(detector)),
+                  subtitle: Text(detector),
+                  onTap: () => _addDetector(detector),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _selectedSection({
+    required String title,
+    required List<BuiltWorkoutExercise> items,
+    required String emptyText,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$title (${items.length})',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          if (items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(emptyText),
+            )
+          else
+            ...items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              return Card(
+                child: ListTile(
+                  leading: Text('${index + 1}.'),
+                  title: Text(displayNameForDetector(item.detector)),
+                  subtitle: Text(_exerciseSummary(item)),
+                  onTap: () => _editExercise(item, items),
+                  trailing: Wrap(
+                    spacing: 2,
+                    children: [
+                      IconButton(
+                        tooltip: 'Move up',
+                        icon: const Icon(Icons.arrow_upward),
+                        onPressed: index == 0
+                            ? null
+                            : () => setState(() {
+                                  final moved = items.removeAt(index);
+                                  items.insert(index - 1, moved);
+                                }),
+                      ),
+                      IconButton(
+                        tooltip: 'Move down',
+                        icon: const Icon(Icons.arrow_downward),
+                        onPressed: index == items.length - 1
+                            ? null
+                            : () => setState(() {
+                                  final moved = items.removeAt(index);
+                                  items.insert(index + 1, moved);
+                                }),
+                      ),
+                      IconButton(
+                        tooltip: 'Remove',
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () => setState(() => items.removeAt(index)),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  String _exerciseSummary(BuiltWorkoutExercise item) {
+    final flags = <String>['${item.duration}s'];
+    if (item.shortIntro) flags.add('short intro');
+    if (item.guidanceChoice != WorkoutTriStateChoice.sdkDefault) {
+      flags.add('guidance ${item.guidanceChoice.displayName.toLowerCase()}');
+    }
+    if (item.adaptiveRomFeedbackEnabled) flags.add('adaptive ROM');
+    if (item.stretchSetEnabled) flags.add('stretch set');
+    return flags.join(' • ');
+  }
+}
+
+class ExerciseConfigScreen extends StatefulWidget {
+  final BuiltWorkoutExercise exercise;
+
+  const ExerciseConfigScreen({super.key, required this.exercise});
+
+  @override
+  State<ExerciseConfigScreen> createState() => _ExerciseConfigScreenState();
+}
+
+class _ExerciseConfigScreenState extends State<ExerciseConfigScreen> {
+  late BuiltWorkoutExercise exercise;
+
+  @override
+  void initState() {
+    super.initState();
+    exercise = BuiltWorkoutExercise(
+      id: widget.exercise.id,
+      detector: widget.exercise.detector,
+      duration: widget.exercise.duration,
+      phonePositionChoice: widget.exercise.phonePositionChoice,
+      guidanceChoice: widget.exercise.guidanceChoice,
+      wideAngleChoice: widget.exercise.wideAngleChoice,
+      shortIntro: widget.exercise.shortIntro,
+      playPreExerciseCountdown: widget.exercise.playPreExerciseCountdown,
+      playRepMilestoneVoice: widget.exercise.playRepMilestoneVoice,
+      repMilestoneInterval: widget.exercise.repMilestoneInterval,
+      playSoundOnEachRep: widget.exercise.playSoundOnEachRep,
+      adaptiveRomFeedbackEnabled: widget.exercise.adaptiveRomFeedbackEnabled,
+      adaptiveRomWarmupReps: widget.exercise.adaptiveRomWarmupReps,
+      stretchSetEnabled: widget.exercise.stretchSetEnabled,
+      stretchSetRepetitions: widget.exercise.stretchSetRepetitions,
+      stretchSetSeconds: widget.exercise.stretchSetSeconds,
+      stretchSetRestSeconds: widget.exercise.stretchSetRestSeconds,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(displayNameForDetector(exercise.detector)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(exercise),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text(
+              'Detector: ${exercise.detector}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            _stepperTile(
+              'Duration',
+              exercise.duration,
+              5,
+              300,
+              5,
+              's',
+              (value) => setState(() => exercise.duration = value),
+            ),
+            _segmentedTile<WorkoutPhonePositionChoice>(
+              'Phone position',
+              exercise.phonePositionChoice,
+              WorkoutPhonePositionChoice.values,
+              (value) => setState(() => exercise.phonePositionChoice = value),
+            ),
+            _segmentedTile<WorkoutTriStateChoice>(
+              'Guidance mode',
+              exercise.guidanceChoice,
+              WorkoutTriStateChoice.values,
+              (value) => setState(() => exercise.guidanceChoice = value),
+            ),
+            if (Platform.isIOS)
+              _segmentedTile<WorkoutTriStateChoice>(
+                'Wide angle camera',
+                exercise.wideAngleChoice,
+                WorkoutTriStateChoice.values,
+                (value) => setState(() => exercise.wideAngleChoice = value),
+              ),
+            _switchTile(
+              'Short intro',
+              exercise.shortIntro,
+              (value) => setState(() => exercise.shortIntro = value),
+            ),
+            _switchTile(
+              'Pre-exercise countdown',
+              exercise.playPreExerciseCountdown,
+              (value) =>
+                  setState(() => exercise.playPreExerciseCountdown = value),
+            ),
+            _switchTile(
+              'Rep milestone voice',
+              exercise.playRepMilestoneVoice,
+              (value) => setState(() => exercise.playRepMilestoneVoice = value),
+            ),
+            _segmentedTile<int>(
+              'Milestone interval',
+              exercise.repMilestoneInterval,
+              const [10, 5],
+              (value) => setState(() => exercise.repMilestoneInterval = value),
+              labelBuilder: (value) => '$value reps',
+            ),
+            _switchTile(
+              'Sound on each rep',
+              exercise.playSoundOnEachRep,
+              (value) => setState(() => exercise.playSoundOnEachRep = value),
+            ),
+            _switchTile(
+              'Adaptive ROM feedback',
+              exercise.adaptiveRomFeedbackEnabled,
+              (value) =>
+                  setState(() => exercise.adaptiveRomFeedbackEnabled = value),
+            ),
+            _stepperTile(
+              'Adaptive warmup reps',
+              exercise.adaptiveRomWarmupReps,
+              1,
+              5,
+              1,
+              '',
+              (value) => setState(() => exercise.adaptiveRomWarmupReps = value),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Stretch set',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            _switchTile(
+              'Enable stretch set',
+              exercise.stretchSetEnabled,
+              (value) => setState(() => exercise.stretchSetEnabled = value),
+            ),
+            _stepperTile(
+              'Stretch repetitions',
+              exercise.stretchSetRepetitions,
+              1,
+              10,
+              1,
+              '',
+              (value) => setState(() => exercise.stretchSetRepetitions = value),
+            ),
+            _stepperTile(
+              'Seconds per stretch',
+              exercise.stretchSetSeconds,
+              3,
+              60,
+              1,
+              's',
+              (value) => setState(() => exercise.stretchSetSeconds = value),
+            ),
+            _stepperTile(
+              'Rest between stretches',
+              exercise.stretchSetRestSeconds,
+              0,
+              30,
+              1,
+              's',
+              (value) => setState(() => exercise.stretchSetRestSeconds = value),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _switchTile(String title, bool value, ValueChanged<bool> onChanged) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(title),
+      value: value,
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _segmentedTile<T>(
+    String title,
+    T selected,
+    List<T> values,
+    ValueChanged<T> onChanged, {
+    String Function(T value)? labelBuilder,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          SegmentedButton<T>(
+            segments: values
+                .map(
+                  (value) => ButtonSegment<T>(
+                    value: value,
+                    label: Text(labelBuilder?.call(value) ??
+                        (value as Object).displayName),
+                  ),
+                )
+                .toList(),
+            selected: {selected},
+            onSelectionChanged: (value) => onChanged(value.single),
           ),
         ],
       ),
     );
   }
 
-  void _addExercise() {
-    if (_selectedExercise == null) {
-      return;
-    }
-
-    setState(() {
-      _selectedExercises.add(_WorkoutExercise(detector: _selectedExercise!));
-    });
-  }
-
-  void _clearExercises() {
-    setState(() {
-      _selectedExercises.clear();
-    });
-  }
-
-  Future<void> _startWorkout() async {
-    if (_selectedExercises.isEmpty) {
-      return;
-    }
-
-    await widget.plugin.setConfig(
-      config:
-          SMKitConfig(enableIntelligenceRest: widget.enableIntelligenceRest),
-    );
-
-    final exercises = _selectedExercises.map((exercise) {
-      final entry = ExerciseCatalog.byDetector[exercise.detector];
-      return SMKitExercise(
-        prettyName: exercise.detector,
-        totalSeconds: 60,
-        videoInstruction:
-            entry?.videoInstruction ?? '${exercise.detector}InstructionVideo',
-        detector: exercise.detector,
-        uiElements: entry?.uiElements ?? const [SMKitUIElement.timer],
-      );
-    }).toList();
-
-    String? introUrl;
-    try {
-      final byteData = await rootBundle.load('customWorkoutIntro.mp3');
-      final file = File(
-        '${(await getTemporaryDirectory()).path}/customWorkoutIntro.mp3',
-      );
-      await file.writeAsBytes(
-        byteData.buffer.asUint8List(
-          byteData.offsetInBytes,
-          byteData.lengthInBytes,
-        ),
-      );
-      introUrl = file.path;
-    } catch (_) {}
-
-    await widget.plugin.startCustomizedWorkout(
-      workout: SMKitWorkout(
-        id: '',
-        name: 'TEST WORKOUT',
-        workoutIntro: introUrl,
-        soundTrack: null,
-        exercises: exercises,
-        workoutClosure: null,
-      ),
-      modifications: widget.modifications,
-      onHandle: widget.onHandle,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final exerciseSummary = _selectedExercises.isEmpty
-        ? 'Workout Exercises: None'
-        : 'Workout Exercises (${_selectedExercises.length}):\n'
-            '${_selectedExercises.asMap().entries.map((entry) => '${entry.key + 1}. ${entry.value.detector}').join('\n')}';
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Workout Builder')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Column(
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: ExerciseTypeFilter.values.map((filter) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                      child: ChoiceChip(
-                        label: Text(exerciseFilterLabel(filter)),
-                        selected: _selectedFilter == filter,
-                        onSelected: (_) {
-                          setState(() {
-                            _selectedFilter = filter;
-                            if (_selectedExercise != null &&
-                                !_filteredExercises.any(
-                                  (exercise) =>
-                                      exercise.detector == _selectedExercise,
-                                )) {
-                              _selectedExercise = null;
-                            }
-                          });
-                        },
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: 300,
-                height: 45,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _selectedExercise != null
-                        ? Colors.blue
-                        : Colors.blueGrey,
-                  ),
-                  onPressed: _chooseExercise,
-                  child: Text(
-                    _selectedExercise ?? 'Choose exercise',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: 300,
-                height: 40,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _selectedExercise != null
-                        ? Colors.green
-                        : Colors.green.withValues(alpha: 0.5),
-                  ),
-                  onPressed: _selectedExercise != null ? _addExercise : null,
-                  child: const Text(
-                    '+ Add Exercise to Workout',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 15),
-              Text(
-                exerciseSummary,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: 150,
-                height: 35,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.withValues(alpha: 0.8),
-                  ),
-                  onPressed: _clearExercises,
-                  child: const Text(
-                    'Clear All',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: 300,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _selectedExercises.isNotEmpty
-                        ? Colors.blue
-                        : Colors.grey.withValues(alpha: 0.5),
-                  ),
-                  onPressed:
-                      _selectedExercises.isNotEmpty ? _startWorkout : null,
-                  child: const Text(
-                    'START WORKOUT',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+  Widget _stepperTile(
+    String title,
+    int value,
+    int min,
+    int max,
+    int step,
+    String suffix,
+    ValueChanged<int> onChanged,
+  ) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(title),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.remove),
+            onPressed: value <= min
+                ? null
+                : () => onChanged((value - step).clamp(min, max)),
           ),
-        ),
+          SizedBox(
+            width: 72,
+            child: Text(
+              suffix.isEmpty ? '$value' : '$value $suffix',
+              textAlign: TextAlign.center,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: value >= max
+                ? null
+                : () => onChanged((value + step).clamp(min, max)),
+          ),
+        ],
       ),
     );
   }
+}
+
+String displayNameForDetector(String detector) {
+  return detector
+      .replaceAll('QL', 'Q L')
+      .replaceAll('IT', 'I T')
+      .replaceAllMapped(
+        RegExp(r'([a-z0-9])([A-Z])'),
+        (match) => '${match[1]} ${match[2]}',
+      );
+}
+
+extension _WorkoutPhonePositionMapping on WorkoutPhonePositionChoice {
+  SMKitPhonePosition? get phonePosition => switch (this) {
+        WorkoutPhonePositionChoice.sdkDefault => null,
+        WorkoutPhonePositionChoice.floor => SMKitPhonePosition.floor,
+        WorkoutPhonePositionChoice.elevated => SMKitPhonePosition.elevated,
+      };
+}
+
+extension _TriStateMapping on WorkoutTriStateChoice {
+  bool? get boolValue => switch (this) {
+        WorkoutTriStateChoice.sdkDefault => null,
+        WorkoutTriStateChoice.on => true,
+        WorkoutTriStateChoice.off => false,
+      };
 }

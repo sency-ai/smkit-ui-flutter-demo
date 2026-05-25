@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 import 'package:smkit_ui_flutter_demo_app/AssessmentBuilderScreen.dart';
+import 'package:smkit_ui_flutter_demo_app/demo_settings.dart';
 
 void main() {
   Future<void> pumpBuilder(WidgetTester tester) async {
@@ -9,8 +10,7 @@ void main() {
       MaterialApp(
         home: AssessmentBuilderScreen(
           plugin: SmkitUiFlutterPlugin(),
-          modifications: const {},
-          enableIntelligenceRest: false,
+          settings: DemoSettings(),
           showSummary: false,
           onHandle: (_) {},
         ),
