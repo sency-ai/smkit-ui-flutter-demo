@@ -1,6 +1,6 @@
 # Start Customized Assessment Guide
 
-This guide explains how to start a customized assessment using the `flutter_smkit_ui` plugin (v1.3.0).
+This guide explains how to start a customized assessment using the `flutter_smkit_ui` plugin (v1.4.8).
 
 ## Step-by-Step: Starting a Customized Assessment
 

@@ -17,7 +17,7 @@
 
 # Start Assessment
 
-This guide explains how to start a Sency Blueprint or Custom Assessment using the `flutter_smkit_ui` plugin (v1.2.9).
+This guide explains how to start a Sency Blueprint or Custom Assessment using the `flutter_smkit_ui` plugin (v1.4.8).
 
 ## Step-by-Step: Starting an Assessment
 

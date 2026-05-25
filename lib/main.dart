@@ -8,6 +8,7 @@ import 'WorkoutResultScreen.dart';
 import 'UISettingsScreen.dart';
 import 'AssessmentBuilderScreen.dart';
 import 'WorkoutBuilderScreen.dart';
+import 'demo_settings.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
@@ -33,11 +34,7 @@ class _MyAppState extends State<MyApp> {
   ValueNotifier<String> workoutResultNotifier = ValueNotifier<String>("");
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
-  // UI / Session settings
-  SkeletonConfig? _skeletonConfig;
-  bool _allowAudioMixing = false;
-  bool _showExternalAudioControl = false;
-  bool _enableIntelligenceRest = false;
+  final DemoSettings _settings = DemoSettings();
 
   // Workout From Program
   bool _showWFPUI = false;
@@ -48,28 +45,7 @@ class _MyAppState extends State<MyApp> {
   SencySupportedLanguage _wfpLanguage = SencySupportedLanguage.english;
   DifficultyLevel _wfpDifficulty = DifficultyLevel.lowDifficulty;
 
-  // Color customization - using default 'green' theme
-  final String selectedTheme = 'green';
-
-  // Get modifications map with current customization settings
-  Map<String, dynamic> get currentModifications => buildModifications();
-
-  // Phone calibration settings - using default values
-  final bool phoneCalibrationEnabled = true;
-  final bool autoCalibrate = false;
-  final double calibrationSensitivity = 0.8;
-
-  // Map theme names to primary colors (only primaryColor is used to set the SDK theme)
-  final Map<String, String> themePrimaryColors = {
-    'green': '#4CAF50',
-    'blue': '#2196F3',
-    'orange': '#FF9800',
-    'red': '#F44336',
-    'purple': '#9C27B0',
-    'silver': '#C0C0C0',
-    'gold': '#FFD700',
-    'pink': '#FF69B4',
-  };
+  Map<String, dynamic> get currentModifications => _settings.modifications;
 
   @override
   void initState() {
@@ -105,6 +81,15 @@ class _MyAppState extends State<MyApp> {
       if (status.data != null) {
         workoutResultNotifier.value = status.data.toString();
       }
+    } else if (status.operation ==
+        SMKitOperation.workoutContinuationPromptDidAppear) {
+      debugPrint('Workout continuation prompt appeared');
+    } else if (status.operation ==
+        SMKitOperation.workoutContinuationUserDidChoose) {
+      final data = status.data;
+      if (data is SMKitWorkoutContinuationChoiceData) {
+        debugPrint('Workout continuation choice: ${data.continueWorkout}');
+      }
     } else if (status.operation == SMKitOperation.error) {
       String message = 'Unknown error';
       if (status.data != null) {
@@ -126,21 +111,6 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
-  // Build modifications map with default customization settings
-  Map<String, dynamic> buildModifications() {
-    return {
-      'primaryColor':
-          themePrimaryColors[selectedTheme] ?? themePrimaryColors['green']!,
-      'phoneCalibration': {
-        'enabled': phoneCalibrationEnabled,
-        'autoCalibrate': autoCalibrate,
-        'calibrationSensitivity': calibrationSensitivity,
-      },
-      'showProgressBar': true,
-      'showCounters': true,
-    };
-  }
-
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     // If the widget was removed from the tree while the asynchronous platform
@@ -156,6 +126,7 @@ class _MyAppState extends State<MyApp> {
     debugPrint('⏳ Configuring SMKitUI...');
     final result = await _smkitUiFlutterPlugin.configure(
       key: apiPublicKey,
+      includesHighlights: _settings.configureHighlightsOnNextLaunch,
       // Android only: force a specific pose model instead of the adaptive default.
       // Options: SmKitPoseModelChoice.prime | .pro | .lite | .ultraLite | .basic
       // Example: poseModelChoice: SmKitPoseModelChoice.pro,
@@ -168,7 +139,7 @@ class _MyAppState extends State<MyApp> {
     setState(() => isConfigured = ok);
 
     if (ok) {
-      _applyIntelligenceRestConfig();
+      _applyDemoSettingsConfig();
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showErrorDialog(
@@ -189,12 +160,8 @@ class _MyAppState extends State<MyApp> {
     // mediumSizeCycles: 1–5 (used when displayMode is mediumCycle)
   }
 
-  /// Applies current intelligence rest setting to the native SDK. Call after
-  /// configure and before starting any workout/assessment so rest suggestions work.
-  void _applyIntelligenceRestConfig() {
-    _smkitUiFlutterPlugin.setConfig(
-      config: SMKitConfig(enableIntelligenceRest: _enableIntelligenceRest),
-    );
+  void _applyDemoSettingsConfig() {
+    unawaited(_settings.applyTo(_smkitUiFlutterPlugin));
   }
 
   @override
@@ -259,45 +226,28 @@ class _MyAppState extends State<MyApp> {
                         const SizedBox(height: 8),
                         ElevatedButton.icon(
                           icon: const Icon(Icons.tune),
-                          label: Text(_skeletonConfig == null
-                              ? 'UI Settings'
-                              : 'UI Settings ✓'),
+                          label: const Text('UI Settings'),
                           onPressed: () async {
-                            final result = await _navigatorKey.currentState!
-                                .push<UISettingsResult>(
+                            await _navigatorKey.currentState!.push<void>(
                               MaterialPageRoute(
                                 builder: (_) => UISettingsScreen(
                                   plugin: _smkitUiFlutterPlugin,
-                                  initialConfig: _skeletonConfig,
-                                  initialAllowAudioMixing: _allowAudioMixing,
-                                  initialShowExternalAudioControl:
-                                      _showExternalAudioControl,
-                                  initialEnableIntelligenceRest:
-                                      _enableIntelligenceRest,
+                                  settings: _settings,
                                 ),
                               ),
                             );
-                            if (result != null) {
-                              setState(() {
-                                _skeletonConfig = result.skeletonConfig;
-                                _allowAudioMixing = result.allowAudioMixing;
-                                _showExternalAudioControl =
-                                    result.showExternalAudioControl;
-                                _enableIntelligenceRest =
-                                    result.enableIntelligenceRest;
-                              });
-                            }
+                            if (mounted) setState(() {});
                           },
                         ),
                         const SizedBox(height: 16),
                         ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             if (!isConfigured) {
                               _showErrorDialog(
                                   'Plugin not configured yet. Please wait for configuration to complete.');
                               return;
                             }
-                            _applyIntelligenceRestConfig();
+                            await _settings.applyTo(_smkitUiFlutterPlugin);
                             _smkitUiFlutterPlugin.startAssessment(
                               type: selectedAssessmentType,
                               userData: {
@@ -318,9 +268,7 @@ class _MyAppState extends State<MyApp> {
                               MaterialPageRoute(
                                 builder: (_) => WorkoutBuilderScreen(
                                   plugin: _smkitUiFlutterPlugin,
-                                  modifications: currentModifications,
-                                  enableIntelligenceRest:
-                                      _enableIntelligenceRest,
+                                  settings: _settings,
                                   onHandle: _handleStatus,
                                 ),
                               ),
@@ -339,9 +287,7 @@ class _MyAppState extends State<MyApp> {
                               MaterialPageRoute(
                                 builder: (_) => AssessmentBuilderScreen(
                                   plugin: _smkitUiFlutterPlugin,
-                                  modifications: currentModifications,
-                                  enableIntelligenceRest:
-                                      _enableIntelligenceRest,
+                                  settings: _settings,
                                   showSummary: showSummary,
                                   onHandle: _handleStatus,
                                 ),
@@ -364,14 +310,14 @@ class _MyAppState extends State<MyApp> {
                           ),
                         ),
                         ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             if (!isConfigured) {
                               _showErrorDialog(
                                   'Plugin not configured yet. Please wait for configuration to complete.');
                               return;
                             }
                             debugPrint('Custom Assessment ID: $assessmentId');
-                            _applyIntelligenceRestConfig();
+                            await _settings.applyTo(_smkitUiFlutterPlugin);
                             _smkitUiFlutterPlugin.startAssessment(
                               type: AssessmentTypes.custom,
                               assessmentID:
@@ -584,8 +530,9 @@ class _MyAppState extends State<MyApp> {
       final smkitLang = _wfpLanguage == SencySupportedLanguage.hebrew
           ? SMKitLanguage.hebrew
           : SMKitLanguage.english;
+      _settings.sessionLanguage = smkitLang;
       _smkitUiFlutterPlugin.setSessionLanguage(language: smkitLang);
-      _applyIntelligenceRestConfig();
+      await _settings.applyTo(_smkitUiFlutterPlugin);
       final config = WorkoutConfig(
         programId: programId,
         week: week,
@@ -593,6 +540,8 @@ class _MyAppState extends State<MyApp> {
         difficultyLevel: _wfpDifficulty,
         workoutDuration: _wfpDuration,
         language: _wfpLanguage,
+        phonePosition: SMKitPhonePosition.floor,
+        shortIntro: true,
       );
       await _smkitUiFlutterPlugin.startWorkoutProgram(
         config: config,
@@ -605,7 +554,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void startCustomizedWorkout() async {
-    _applyIntelligenceRestConfig();
+    await _settings.applyTo(_smkitUiFlutterPlugin);
     var workout = await getDemoWorkout();
     _smkitUiFlutterPlugin.startCustomizedWorkout(
       workout: workout,
@@ -629,15 +578,9 @@ class _MyAppState extends State<MyApp> {
       var assessment = await getDemoAssessment();
       debugPrint('✅ Assessment created: ${assessment.name}');
 
-      // Set session preferences (fire-and-forget)
-      _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
-      _smkitUiFlutterPlugin.setCounterPreferences(
-          counterPreferences: SMKitCounterPreferences.perfectOnly);
-      _smkitUiFlutterPlugin.setEndExercisePreferences(
-          endExercisePrefernces: SMKitEndExercisePreferences.targetBased);
-
-      _applyIntelligenceRestConfig();
-      debugPrint('🚀 Starting assessment with theme: $selectedTheme...');
+      await _settings.applyTo(_smkitUiFlutterPlugin);
+      debugPrint(
+          '🚀 Starting assessment with theme: ${_settings.colorTheme.name}...');
 
       _smkitUiFlutterPlugin.startCustomizedAssessment(
           assessment: assessment,
@@ -715,15 +658,39 @@ class _MyAppState extends State<MyApp> {
         uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
         detector: "HighKnees",
         exerciseClosure: null,
+        shortIntro: true,
+        playPreExerciseCountdown: true,
+        playSoundOnEachRep: true,
+        playRepMilestoneVoice: true,
+        repMilestoneInterval: 10,
+        adaptiveRomFeedbackEnabled: true,
+        adaptiveRomWarmupReps: 3,
+        guidanceMode: true,
+        guidanceVideoSegments: const {
+          'phase1_orient': SMKitGuidanceVideoSegment.freeze(0),
+          'phase4_action': SMKitGuidanceVideoSegment.play(from: 1),
+        },
       ),
       SMKitExercise(
         prettyName: "Plank",
         totalSeconds: 30,
         exerciseIntro: null,
         videoInstruction: "PlankHighStaticInstructionVideo",
-        uiElements: [SMKitUIElement.gaugeOfMotion, SMKitUIElement.timer],
+        uiElements: [
+          SMKitUIElement.gaugeOfMotion,
+          SMKitUIElement.timer,
+          SMKitUIElement.countdownTimer,
+          SMKitUIElement.holdingPosition,
+        ],
         detector: "PlankHighStatic",
         exerciseClosure: "",
+        shortIntro: true,
+        playPreExerciseCountdown: true,
+        stretchSetConfig: const SMKitStretchSetConfig(
+          repetitions: 2,
+          secondsPerStretch: 10,
+          restSecondsBetweenStretches: 3,
+        ),
       ),
     ];
 
@@ -736,6 +703,27 @@ class _MyAppState extends State<MyApp> {
       getInFrame: null,
       bodycalFinished: null,
       workoutClosure: null,
+      continuation: SMKitWorkoutContinuation(
+        introSoundKey: introURL,
+        interactionUnlockSoundKey: introURL,
+        exercises: [
+          SMKitExercise(
+            prettyName: "Rest",
+            totalSeconds: 10,
+            detector: "Rest",
+            uiElements: [SMKitUIElement.timer],
+          ),
+          SMKitExercise(
+            prettyName: "HighKnees Bonus",
+            totalSeconds: 20,
+            videoInstruction: "HighKneesInstructionVideo",
+            detector: "HighKnees",
+            uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
+            shortIntro: true,
+            playSoundOnEachRep: true,
+          ),
+        ],
+      ),
     );
   }
 

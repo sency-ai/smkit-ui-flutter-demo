@@ -1,6 +1,6 @@
 # Start Custom Workout Guide
 
-This guide explains how to start a custom workout using the `flutter_smkit_ui` plugin (v1.3.0).
+This guide explains how to start a custom workout using the `flutter_smkit_ui` plugin (v1.4.8).
 
 ## Step-by-Step: Starting a Custom Workout
 
@@ -29,6 +29,18 @@ This guide explains how to start a custom workout using the `flutter_smkit_ui` p
          uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
          detector: "HighKnees",
          exerciseClosure: null,
+         shortIntro: true,
+         playSoundOnEachRep: true,
+         playRepMilestoneVoice: true,
+         repMilestoneInterval: 10,
+         playPreExerciseCountdown: true,
+         adaptiveRomFeedbackEnabled: true,
+         adaptiveRomWarmupReps: 3,
+         guidanceMode: true,
+         guidanceVideoSegments: const {
+           'phase1_orient': SMKitGuidanceVideoSegment.freeze(0),
+           'phase4_action': SMKitGuidanceVideoSegment.play(from: 1),
+         },
        ),
        // Add more exercises as needed
      ];
@@ -42,9 +54,22 @@ This guide explains how to start a custom workout using the `flutter_smkit_ui` p
        getInFrame: null,
        bodycalFinished: null,
        workoutClosure: null,
+       continuation: SMKitWorkoutContinuation(
+         interactionUnlockSoundKey: introURL,
+         exercises: [
+           SMKitExercise(
+             prettyName: "Rest",
+             totalSeconds: 10,
+             detector: "Rest",
+             uiElements: [SMKitUIElement.timer],
+           ),
+         ],
+       ),
      );
    }
    ```
+
+Optional v1.4.8 fields include `shortIntro`, `playSoundOnEachRep`, `playRepMilestoneVoice`, `repMilestoneInterval`, `playPreExerciseCountdown`, `adaptiveRomFeedbackEnabled`, `adaptiveRomWarmupReps`, `guidanceMode`, `guidanceVideoSegments`, `stretchSetConfig`, and workout `continuation`.
 
 ## Adding Rest Periods Between Exercises
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 
+import 'demo_settings.dart';
 import 'exercise_catalog.dart';
 
 class _SelectedAssessmentExercise {
@@ -22,16 +23,14 @@ class _SelectedAssessmentExercise {
 
 class AssessmentBuilderScreen extends StatefulWidget {
   final SmkitUiFlutterPlugin plugin;
-  final Map<String, dynamic> modifications;
-  final bool enableIntelligenceRest;
+  final DemoSettings settings;
   final bool showSummary;
   final void Function(SMKitStatus) onHandle;
 
   const AssessmentBuilderScreen({
     super.key,
     required this.plugin,
-    required this.modifications,
-    required this.enableIntelligenceRest,
+    required this.settings,
     required this.showSummary,
     required this.onHandle,
   });
@@ -83,18 +82,7 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
     });
 
     try {
-      await widget.plugin.setSessionLanguage(language: SMKitLanguage.english);
-      await widget.plugin.setCounterPreferences(
-        counterPreferences: SMKitCounterPreferences.perfectOnly,
-      );
-      await widget.plugin.setEndExercisePreferences(
-        endExercisePrefernces: SMKitEndExercisePreferences.targetBased,
-      );
-      await widget.plugin.setConfig(
-        config: SMKitConfig(
-          enableIntelligenceRest: widget.enableIntelligenceRest,
-        ),
-      );
+      await widget.settings.applyTo(widget.plugin);
 
       final exercises = _selectedExercises.map((selectedExercise) {
         final scoringType = switch (selectedExercise.scoringMode) {
@@ -134,7 +122,7 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
           exercises: exercises,
         ),
         showSummary: widget.showSummary,
-        modifications: widget.modifications,
+        modifications: widget.settings.modifications,
         onHandle: widget.onHandle,
       );
     } catch (error) {
