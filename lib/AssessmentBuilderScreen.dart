@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 
@@ -45,9 +47,14 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
   final List<_SelectedAssessmentExercise> _selectedExercises = [];
   int _nextExerciseId = 1;
   bool _isStarting = false;
+  bool _targetRepsWithoutTimer = false;
 
   List<ExerciseCatalogEntry> get _filteredExercises =>
       ExerciseCatalog.filteredExercises(_selectedFilter);
+
+  bool get _hasRepScoredExercise => _selectedExercises.any(
+        (exercise) => exercise.scoringMode == AssessmentScoringMode.reps,
+      );
 
   void _addExercise(ExerciseCatalogEntry entry) {
     setState(() {
@@ -63,12 +70,15 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
   void _removeExercise(int id) {
     setState(() {
       _selectedExercises.removeWhere((exercise) => exercise.id == id);
+      _targetRepsWithoutTimer =
+          _targetRepsWithoutTimer && _hasRepScoredExercise;
     });
   }
 
   void _clearExercises() {
     setState(() {
       _selectedExercises.clear();
+      _targetRepsWithoutTimer = false;
     });
   }
 
@@ -83,6 +93,11 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
 
     try {
       await widget.settings.applyTo(widget.plugin);
+      if (_targetRepsWithoutTimer) {
+        await widget.plugin.setEndExercisePreferences(
+          endExercisePrefernces: SMKitEndExercisePreferences.targetBased,
+        );
+      }
 
       final exercises = _selectedExercises.map((selectedExercise) {
         final scoringType = switch (selectedExercise.scoringMode) {
@@ -96,7 +111,7 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
           totalSeconds: selectedExercise.duration,
           videoInstruction: selectedExercise.entry.videoInstruction,
           detector: selectedExercise.entry.detector,
-          uiElements: selectedExercise.entry.uiElements,
+          uiElements: _uiElementsFor(selectedExercise),
           scoringParams: ScoringParams(
             type: scoringType,
             scoreFactor: 0.5,
@@ -139,6 +154,22 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
         });
       }
     }
+  }
+
+  List<SMKitUIElement> _uiElementsFor(
+    _SelectedAssessmentExercise selectedExercise,
+  ) {
+    final elements = selectedExercise.entry.uiElements;
+    if (!_targetRepsWithoutTimer ||
+        !Platform.isIOS ||
+        selectedExercise.scoringMode != AssessmentScoringMode.reps) {
+      return elements;
+    }
+
+    final withoutTimer = elements
+        .where((element) => element != SMKitUIElement.timer)
+        .toList();
+    return withoutTimer.isEmpty ? [SMKitUIElement.repsCounter] : withoutTimer;
   }
 
   @override
@@ -297,6 +328,8 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
                 onScoringModeChanged: (mode) {
                   setState(() {
                     selectedExercise.scoringMode = mode;
+                    _targetRepsWithoutTimer =
+                        _targetRepsWithoutTimer && _hasRepScoredExercise;
                   });
                 },
                 onDurationChanged: (value) {
@@ -317,6 +350,22 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
               );
             },
           ),
+        if (Platform.isIOS) ...[
+          const SizedBox(height: 12),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Target reps without timer'),
+            subtitle: const Text(
+              'Reps-scored exercises hide the timer and finish when target reps are reached.',
+            ),
+            value: _targetRepsWithoutTimer,
+            onChanged: _hasRepScoredExercise
+                ? (value) => setState(() {
+                    _targetRepsWithoutTimer = value;
+                  })
+                : null,
+          ),
+        ],
         const SizedBox(height: 20),
         SizedBox(
           width: double.infinity,

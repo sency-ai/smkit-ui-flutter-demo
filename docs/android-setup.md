@@ -1,90 +1,85 @@
 # Android Setup
 
-In order to be compatible with SMKitUI, the Android project should make some changes.
+The demo is configured for Flutter 3.44+, Gradle 8.14, Android Gradle Plugin 8.13.2, Kotlin 2.2.20, Java 17, and minSdk 26.
 
-At `gradle-wrapper.properties` please change gradle version to be 8^.
+In `android/gradle/wrapper/gradle-wrapper.properties`:
 
-```groovy
-  distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-bin.zip
+```properties
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.14-bin.zip
 ```
 
-Under `gradle.properties` on project level add the following: 
+In `android/settings.gradle`, use Flutter's plugin loader and declare the Android/Kotlin plugin versions:
 
 ```groovy
-  artifactory_contentUrl = https://artifacts.sency.ai/artifactory/release
-```
+pluginManagement {
+    def flutterSdkPath = {
+        def properties = new Properties()
+        file("local.properties").withInputStream { properties.load(it) }
+        def flutterSdkPath = properties.getProperty("flutter.sdk")
+        assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+        return flutterSdkPath
+    }()
 
-Remove all the content in `settings.gradle` and insert the follow: 
-```groovy
-  include ":app" // YOUR Module Name
-  def localPropertiesFile = new File(rootProject.projectDir, "local.properties")
-  def properties = new Properties()
+    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
-  assert localPropertiesFile.exists()
-  localPropertiesFile.withReader("UTF-8") { reader -> properties.load(reader) }
-
-  def flutterSdkPath = properties.getProperty("flutter.sdk")
-  assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
-  apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle"
-```  
-
-At `build.gradle` on project level insert buildscript block like the following:
-And please make sure your kotlin_version is at least 1.9
-```groovy
-buildscript {
-  ext.kotlin_version = '1.9.24'
-  repositories {
-      google()
-      mavenCentral()
-  }
-
-  dependencies {
-      classpath 'com.android.tools.build:gradle:8.0.2'
-      classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-      classpath 'com.google.gms:google-services:4.3.8'
-  }
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
 }
+
+plugins {
+    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+    id "com.android.application" version "8.13.2" apply false
+    id "org.jetbrains.kotlin.android" version "2.2.20" apply false
+}
+
+include ":app"
 ```
 
-Also please specify under allprojects.repositories our repo url
+At project level, keep the Sency artifact repository available in `android/build.gradle`:
+
 ```groovy
 allprojects {
-  repositories {
-      google()
-      mavenCentral()
-      maven {
-          url "${artifactory_contentUrl}"
-      }
-  }
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url "https://artifacts.sency.ai/artifactory/release"
+        }
+    }
 }
 ```
 
-At `build.gradle` on module level please remove upper Plugin{} auto-generate block
-And Insert the following:
+In `android/app/build.gradle`, use the Flutter Gradle plugin and built-in Kotlin support:
+
 ```groovy
-def flutterRoot = localProperties.getProperty('flutter.sdk')
-if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
+plugins {
+    id "com.android.application"
+    id "dev.flutter.flutter-gradle-plugin"
 }
 
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-android{
-  ...
-}
-```
-> :warning: **Please make sure**: To declare def flutterRoot before applying plugins !
+android {
+    compileSdk 36
 
-At `build.gradle` on module level please add packagingOptions and change `minSdkVersion` to 26
-```groovy
-android{
-  ...
-  packagingOptions {
-      pickFirst '**/*.so'
-  }
-  defaultConfig {
-    minSdkVersion 26
-  }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packagingOptions {
+        pickFirst "**/*.so"
+    }
+
+    defaultConfig {
+        minSdkVersion 26
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
 }
 ```
