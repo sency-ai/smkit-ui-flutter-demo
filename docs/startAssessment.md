@@ -17,7 +17,7 @@
 
 # Start Assessment
 
-This guide explains how to start a Sency Blueprint or Custom Assessment using the `flutter_smkit_ui` plugin (v1.4.8).
+This guide explains how to start a Sency Blueprint or Custom Assessment using the `flutter_smkit_ui` plugin (v1.5.1).
 
 ## Step-by-Step: Starting an Assessment
 
@@ -48,11 +48,17 @@ This guide explains how to start a Sency Blueprint or Custom Assessment using th
 
 ## Options (Setters)
 
-**⚠️ Important for v1.2.8+**: These methods are now fire-and-forget (don't use `await`):
+These async setters can be awaited before starting the assessment so preference setup errors are handled before session initialization:
 
-- `_smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english)`
-- `_smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly)`
-- `_smkitUiFlutterPlugin.setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased)`
+```dart
+await _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
+await _smkitUiFlutterPlugin.setCounterPreferences(
+  counterPreferences: SMKitCounterPreferences.perfectOnly,
+);
+await _smkitUiFlutterPlugin.setEndExercisePreferences(
+  endExercisePrefernces: SMKitEndExercisePreferences.targetBased,
+);
+```
 
 Call these before starting the assessment to customize behavior.
 

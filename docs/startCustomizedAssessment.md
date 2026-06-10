@@ -1,6 +1,6 @@
 # Start Customized Assessment Guide
 
-This guide explains how to start a customized assessment using the `flutter_smkit_ui` plugin (v1.4.8).
+This guide explains how to start a customized assessment using the `flutter_smkit_ui` plugin (v1.5.1).
 
 ## Step-by-Step: Starting a Customized Assessment
 
@@ -27,7 +27,6 @@ This guide explains how to start a customized assessment using the `flutter_smki
            type: ScoringType.reps,
            scoreFactor: 0.5,
            targetReps: 30,
-           targetTime: 0,
            targetRom: "",
          ),
        ),
@@ -71,7 +70,6 @@ Future<SMKitWorkout> getAssessmentWithRest() async {
         type: ScoringType.reps,
         scoreFactor: 0.5,
         targetReps: 30,
-        targetTime: 0,
         targetRom: "",
       ),
     ),
@@ -98,7 +96,6 @@ Future<SMKitWorkout> getAssessmentWithRest() async {
         type: ScoringType.reps,
         scoreFactor: 0.6,
         targetReps: 20,
-        targetTime: 0,
         targetRom: "",
       ),
     ),
@@ -124,7 +121,6 @@ Future<SMKitWorkout> getAssessmentWithRest() async {
       scoringParams: ScoringParams(
         type: ScoringType.time,
         scoreFactor: 1.0,
-        targetReps: 0,
         targetTime: 30,
         targetRom: "",
       ),
@@ -154,12 +150,51 @@ Future<SMKitWorkout> getAssessmentWithRest() async {
 - Rest periods do not contribute to the overall assessment score
 
 2. **Set Options (Setters)**
-   - **⚠️ Important for v1.2.8+**: These methods are now fire-and-forget (don't use `await`):
+   - These async setters can be awaited before starting the assessment so preference setup errors are handled before session initialization:
    ```dart
-   _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
-   _smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly);
-   _smkitUiFlutterPlugin.setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased);
+   await _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
+   await _smkitUiFlutterPlugin.setCounterPreferences(
+     counterPreferences: SMKitCounterPreferences.perfectOnly,
+   );
+   await _smkitUiFlutterPlugin.setEndExercisePreferences(
+     endExercisePrefernces: SMKitEndExercisePreferences.targetBased,
+   );
    ```
+
+### Target Reps Without a Visible Timer
+
+For rep-scored customized assessments, set `SMKitEndExercisePreferences.targetBased` and provide `targetReps`. On iOS, the timer UI can be omitted from the exercise `uiElements`; the exercise ends when the user reaches `targetReps`.
+
+```dart
+await _smkitUiFlutterPlugin.setEndExercisePreferences(
+  endExercisePrefernces: SMKitEndExercisePreferences.targetBased,
+);
+
+final assessment = SMKitWorkout(
+  id: 'target-reps-assessment',
+  name: 'Target Reps Assessment',
+  exercises: [
+    SMKitExercise(
+      prettyName: 'Squat Regular',
+      detector: 'SquatRegular',
+      totalSeconds: 45,
+      videoInstruction: 'SquatRegularInstructionVideo',
+      uiElements: [
+        SMKitUIElement.repsCounter,
+        SMKitUIElement.gaugeOfMotion,
+      ],
+      scoringParams: ScoringParams(
+        type: ScoringType.reps,
+        scoreFactor: 0.5,
+        targetReps: 5,
+        targetRom: '',
+      ),
+    ),
+  ],
+);
+```
+
+`totalSeconds` is still included because the native exercise payload requires it. Android currently requires `SMKitUIElement.timer` to be present for target-reps auto-ending, so the demo exposes the no-visible-timer toggle only on iOS.
 
 3. **Start the Customized Assessment**
    ```dart

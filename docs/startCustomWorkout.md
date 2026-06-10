@@ -1,6 +1,6 @@
 # Start Custom Workout Guide
 
-This guide explains how to start a custom workout using the `flutter_smkit_ui` plugin (v1.4.8).
+This guide explains how to start a custom workout using the `flutter_smkit_ui` plugin (v1.5.1).
 
 ## Step-by-Step: Starting a Custom Workout
 
@@ -69,7 +69,7 @@ This guide explains how to start a custom workout using the `flutter_smkit_ui` p
    }
    ```
 
-Optional v1.4.8 fields include `shortIntro`, `playSoundOnEachRep`, `playRepMilestoneVoice`, `repMilestoneInterval`, `playPreExerciseCountdown`, `adaptiveRomFeedbackEnabled`, `adaptiveRomWarmupReps`, `guidanceMode`, `guidanceVideoSegments`, `stretchSetConfig`, and workout `continuation`.
+Optional v1.5.x fields include `shortIntro`, `playSoundOnEachRep`, `playRepMilestoneVoice`, `repMilestoneInterval`, `playPreExerciseCountdown`, `adaptiveRomFeedbackEnabled`, `adaptiveRomWarmupReps`, `guidanceMode`, `guidanceVideoSegments`, `stretchSetConfig`, and workout `continuation`.
 
 ## Adding Rest Periods Between Exercises
 
@@ -168,11 +168,17 @@ Future<SMKitWorkout> getWorkoutWithRest() async {
 
 ## Options (Setters)
 
-**⚠️ Important for v1.2.8+**: These methods are now fire-and-forget (don't use `await`):
+These async setters can be awaited before starting the workout so preference setup errors are handled before session initialization:
 
-- `_smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english)`
-- `_smkitUiFlutterPlugin.setCounterPreferences(counterPreferences: SMKitCounterPreferences.perfectOnly)`
-- `_smkitUiFlutterPlugin.setEndExercisePreferences(endExercisePrefernces: SMKitEndExercisePreferences.targetBased)`
+```dart
+await _smkitUiFlutterPlugin.setSessionLanguage(language: SMKitLanguage.english);
+await _smkitUiFlutterPlugin.setCounterPreferences(
+  counterPreferences: SMKitCounterPreferences.perfectOnly,
+);
+await _smkitUiFlutterPlugin.setEndExercisePreferences(
+  endExercisePrefernces: SMKitEndExercisePreferences.targetBased,
+);
+```
 
 Call these before starting the workout to customize behavior.
 

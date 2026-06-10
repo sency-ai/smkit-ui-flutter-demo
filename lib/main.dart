@@ -531,7 +531,6 @@ class _MyAppState extends State<MyApp> {
           ? SMKitLanguage.hebrew
           : SMKitLanguage.english;
       _settings.sessionLanguage = smkitLang;
-      _smkitUiFlutterPlugin.setSessionLanguage(language: smkitLang);
       await _settings.applyTo(_smkitUiFlutterPlugin);
       final config = WorkoutConfig(
         programId: programId,
@@ -579,6 +578,11 @@ class _MyAppState extends State<MyApp> {
       debugPrint('✅ Assessment created: ${assessment.name}');
 
       await _settings.applyTo(_smkitUiFlutterPlugin);
+      await _smkitUiFlutterPlugin.setEndExercisePreferences(
+        endExercisePrefernces: SMKitEndExercisePreferences.targetBased,
+      );
+      debugPrint(
+          'Target-based ending enabled: rep exercises end when targetReps is reached.');
       debugPrint(
           '🚀 Starting assessment with theme: ${_settings.colorTheme.name}...');
 
@@ -736,7 +740,7 @@ class _MyAppState extends State<MyApp> {
       SMKitExercise(
         prettyName: "Squat Regular",
         exerciseIntro: null,
-        totalSeconds: 10,
+        totalSeconds: 45,
         videoInstruction: "SquatRegularInstructionVideo",
         uiElements: [
           SMKitUIElement.timer,
@@ -748,8 +752,8 @@ class _MyAppState extends State<MyApp> {
         scoringParams: ScoringParams(
           type: ScoringType.reps,
           scoreFactor: 0.5,
+          // In target-based mode, the exercise ends after this many reps.
           targetReps: 3,
-          targetTime: 0,
           targetRom: "",
         ),
       ),
@@ -758,24 +762,13 @@ class _MyAppState extends State<MyApp> {
         exerciseIntro: null,
         totalSeconds: 10,
         videoInstruction: "Rest",
-        uiElements: [
-          SMKitUIElement.timer,
-          SMKitUIElement.gaugeOfMotion,
-          SMKitUIElement.repsCounter
-        ],
+        uiElements: [SMKitUIElement.timer],
         detector: "Rest",
         exerciseClosure: "",
-        scoringParams: ScoringParams(
-          type: ScoringType.reps,
-          scoreFactor: 0.5,
-          targetReps: 3,
-          targetTime: 0,
-          targetRom: "",
-        ),
       ),
       SMKitExercise(
         prettyName: "SquatRegularOverheadStatic",
-        totalSeconds: 10,
+        totalSeconds: 30,
         exerciseIntro: null,
         videoInstruction: "SquatRegularOverheadStaticInstructionVideo",
         uiElements: [SMKitUIElement.gaugeOfMotion, SMKitUIElement.timer],
@@ -788,8 +781,7 @@ class _MyAppState extends State<MyApp> {
         scoringParams: ScoringParams(
           type: ScoringType.time,
           scoreFactor: 0.5,
-          targetTime: 20,
-          targetReps: 0,
+          targetTime: 10,
           targetRom: "",
         ),
       ),
