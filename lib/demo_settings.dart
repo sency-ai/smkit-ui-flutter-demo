@@ -61,7 +61,12 @@ class DemoSettings {
   bool guidanceDebugLogging = false;
   String androidConfigString = '';
 
-  List<SMKitPauseType> allowedPauseTypes = [...SMKitPauseType.values];
+  List<SMKitPauseType> allowedPauseTypes = [
+    SMKitPauseType.quit,
+    SMKitPauseType.skip,
+    SMKitPauseType.startOver,
+    SMKitPauseType.resume,
+  ];
 
   static const colorThemeOptions = SMKitColorTheme.values;
   static const skeletonPresetOptions = SkeletonPreset.values;
