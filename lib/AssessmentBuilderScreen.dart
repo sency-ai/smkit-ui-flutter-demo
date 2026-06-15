@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 
@@ -14,13 +12,11 @@ class _SelectedAssessmentExercise {
   int targetReps;
   int targetTime;
 
-  _SelectedAssessmentExercise({
-    required this.id,
-    required this.entry,
-  })  : scoringMode = entry.defaultAssessmentMode,
-        duration = entry.defaultDuration,
-        targetReps = entry.defaultTargetReps,
-        targetTime = entry.defaultTargetTime;
+  _SelectedAssessmentExercise({required this.id, required this.entry})
+    : scoringMode = entry.defaultAssessmentMode,
+      duration = entry.defaultDuration,
+      targetReps = entry.defaultTargetReps,
+      targetTime = entry.defaultTargetTime;
 }
 
 class AssessmentBuilderScreen extends StatefulWidget {
@@ -47,22 +43,19 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
   final List<_SelectedAssessmentExercise> _selectedExercises = [];
   int _nextExerciseId = 1;
   bool _isStarting = false;
-  bool _targetRepsWithoutTimer = false;
+  bool _targetRepsProgress = false;
 
   List<ExerciseCatalogEntry> get _filteredExercises =>
       ExerciseCatalog.filteredExercises(_selectedFilter);
 
   bool get _hasRepScoredExercise => _selectedExercises.any(
-        (exercise) => exercise.scoringMode == AssessmentScoringMode.reps,
-      );
+    (exercise) => exercise.scoringMode == AssessmentScoringMode.reps,
+  );
 
   void _addExercise(ExerciseCatalogEntry entry) {
     setState(() {
       _selectedExercises.add(
-        _SelectedAssessmentExercise(
-          id: _nextExerciseId++,
-          entry: entry,
-        ),
+        _SelectedAssessmentExercise(id: _nextExerciseId++, entry: entry),
       );
     });
   }
@@ -70,15 +63,14 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
   void _removeExercise(int id) {
     setState(() {
       _selectedExercises.removeWhere((exercise) => exercise.id == id);
-      _targetRepsWithoutTimer =
-          _targetRepsWithoutTimer && _hasRepScoredExercise;
+      _targetRepsProgress = _targetRepsProgress && _hasRepScoredExercise;
     });
   }
 
   void _clearExercises() {
     setState(() {
       _selectedExercises.clear();
-      _targetRepsWithoutTimer = false;
+      _targetRepsProgress = false;
     });
   }
 
@@ -93,17 +85,53 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
 
     try {
       await widget.settings.applyTo(widget.plugin);
-      if (_targetRepsWithoutTimer) {
-        await widget.plugin.setEndExercisePreferences(
-          endExercisePrefernces: SMKitEndExercisePreferences.targetBased,
+      await widget.plugin.setEndExercisePreferences(
+        endExercisePrefernces: _targetRepsProgress
+            ? SMKitEndExercisePreferences.targetBased
+            : SMKitEndExercisePreferences.defaultBased,
+      );
+
+      final hasTimerBasedRepExercise =
+          !_targetRepsProgress &&
+          _selectedExercises.any(
+            (exercise) => exercise.scoringMode == AssessmentScoringMode.reps,
+          );
+      final hasNonRepExercise = _selectedExercises.any(
+        (exercise) => exercise.scoringMode != AssessmentScoringMode.reps,
+      );
+      if (hasTimerBasedRepExercise && hasNonRepExercise) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Use only reps exercises for timer mode, or enable target reps progress.',
+            ),
+          ),
         );
+        return;
       }
 
       final exercises = _selectedExercises.map((selectedExercise) {
-        final scoringType = switch (selectedExercise.scoringMode) {
-          AssessmentScoringMode.reps => ScoringType.reps,
-          AssessmentScoringMode.time => ScoringType.time,
-          AssessmentScoringMode.rom => ScoringType.rom,
+        final isTargetRepsProgress =
+            _targetRepsProgress &&
+            selectedExercise.scoringMode == AssessmentScoringMode.reps;
+        final ScoringParams? scoringParams = switch (selectedExercise
+            .scoringMode) {
+          AssessmentScoringMode.reps =>
+            isTargetRepsProgress
+                ? ScoringParams.targetReps(
+                    scoreFactor: 0.5,
+                    targetReps: selectedExercise.targetReps,
+                  )
+                : null,
+          AssessmentScoringMode.time => ScoringParams.targetTime(
+            scoreFactor: 0.5,
+            targetTime: selectedExercise.targetTime,
+          ),
+          AssessmentScoringMode.rom => ScoringParams.targetRom(
+            scoreFactor: 0.5,
+            targetRom: selectedExercise.entry.currentPlatformRomTarget ?? '',
+          ),
         };
 
         return SMKitExercise(
@@ -112,34 +140,30 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
           videoInstruction: selectedExercise.entry.videoInstruction,
           detector: selectedExercise.entry.detector,
           uiElements: _uiElementsFor(selectedExercise),
-          scoringParams: ScoringParams(
-            type: scoringType,
-            scoreFactor: 0.5,
-            targetTime:
-                selectedExercise.scoringMode == AssessmentScoringMode.time
-                    ? selectedExercise.targetTime
-                    : 0,
-            targetReps:
-                selectedExercise.scoringMode == AssessmentScoringMode.reps
-                    ? selectedExercise.targetReps
-                    : 0,
-            targetRom: selectedExercise.scoringMode == AssessmentScoringMode.rom
-                ? selectedExercise.entry.currentPlatformRomTarget ?? ''
-                : '',
-          ),
+          scoringParams: scoringParams,
         );
       }).toList();
 
-      await widget.plugin.startCustomizedAssessment(
-        assessment: SMKitWorkout(
-          id: 'demo-custom-assessment',
-          name: 'Custom Assessment',
-          exercises: exercises,
-        ),
-        showSummary: widget.showSummary,
-        modifications: widget.settings.modifications,
-        onHandle: widget.onHandle,
+      final workout = SMKitWorkout(
+        id: 'demo-custom-assessment',
+        name: 'Custom Assessment',
+        exercises: exercises,
       );
+      if (hasTimerBasedRepExercise) {
+        await widget.plugin.startCustomizedWorkout(
+          workout: workout,
+          showSummary: widget.showSummary,
+          modifications: widget.settings.modifications,
+          onHandle: widget.onHandle,
+        );
+      } else {
+        await widget.plugin.startCustomizedAssessment(
+          assessment: workout,
+          showSummary: widget.showSummary,
+          modifications: widget.settings.modifications,
+          onHandle: widget.onHandle,
+        );
+      }
     } catch (error) {
       if (!mounted) {
         return;
@@ -160,16 +184,13 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
     _SelectedAssessmentExercise selectedExercise,
   ) {
     final elements = selectedExercise.entry.uiElements;
-    if (!_targetRepsWithoutTimer ||
-        !Platform.isIOS ||
-        selectedExercise.scoringMode != AssessmentScoringMode.reps) {
+    if (!_targetRepsProgress ||
+        selectedExercise.scoringMode != AssessmentScoringMode.reps ||
+        elements.contains(SMKitUIElement.timer)) {
       return elements;
     }
 
-    final withoutTimer = elements
-        .where((element) => element != SMKitUIElement.timer)
-        .toList();
-    return withoutTimer.isEmpty ? [SMKitUIElement.repsCounter] : withoutTimer;
+    return [SMKitUIElement.timer, ...elements];
   }
 
   @override
@@ -195,10 +216,7 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
                 child: _buildSelectedExercisesSection(),
               ),
               const SizedBox(height: 20),
-              _PaneShell(
-                title: 'All Exercises',
-                child: _buildCatalogSection(),
-              ),
+              _PaneShell(title: 'All Exercises', child: _buildCatalogSection()),
             ],
           ),
         ),
@@ -221,20 +239,21 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
             children: ExerciseTypeFilter.values
                 .where((filter) => filter != ExerciseTypeFilter.bodyAssessment)
                 .map((filter) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  key: ValueKey('filter-${filter.name}'),
-                  label: Text(exerciseFilterLabel(filter)),
-                  selected: _selectedFilter == filter,
-                  onSelected: (_) {
-                    setState(() {
-                      _selectedFilter = filter;
-                    });
-                  },
-                ),
-              );
-            }).toList(),
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      key: ValueKey('filter-${filter.name}'),
+                      label: Text(exerciseFilterLabel(filter)),
+                      selected: _selectedFilter == filter,
+                      onSelected: (_) {
+                        setState(() {
+                          _selectedFilter = filter;
+                        });
+                      },
+                    ),
+                  );
+                })
+                .toList(),
           ),
         ),
         const SizedBox(height: 20),
@@ -267,16 +286,12 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
                       runSpacing: 8,
                       children: [
                         Chip(
-                          label: Text(
-                            exerciseFilterLabel(displayType),
-                          ),
+                          label: Text(exerciseFilterLabel(displayType)),
                           visualDensity: VisualDensity.compact,
                         ),
                         for (final mode in entry.assessmentModes)
                           Chip(
-                            label: Text(
-                              assessmentScoringModeLabel(mode),
-                            ),
+                            label: Text(assessmentScoringModeLabel(mode)),
                             visualDensity: VisualDensity.compact,
                           ),
                       ],
@@ -310,9 +325,7 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
           const Card(
             child: Padding(
               padding: EdgeInsets.all(16),
-              child: Text(
-                'Add at least one exercise to build an assessment.',
-              ),
+              child: Text('Add at least one exercise to build an assessment.'),
             ),
           ),
         if (_selectedExercises.isNotEmpty)
@@ -328,8 +341,8 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
                 onScoringModeChanged: (mode) {
                   setState(() {
                     selectedExercise.scoringMode = mode;
-                    _targetRepsWithoutTimer =
-                        _targetRepsWithoutTimer && _hasRepScoredExercise;
+                    _targetRepsProgress =
+                        _targetRepsProgress && _hasRepScoredExercise;
                   });
                 },
                 onDurationChanged: (value) {
@@ -350,22 +363,23 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
               );
             },
           ),
-        if (Platform.isIOS) ...[
-          const SizedBox(height: 12),
-          SwitchListTile(
+        const SizedBox(height: 12),
+        Material(
+          color: Colors.transparent,
+          child: SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Target reps without timer'),
+            title: const Text('Target reps progress'),
             subtitle: const Text(
-              'Reps-scored exercises hide the timer and finish when target reps are reached.',
+              'Reps-scored exercises show completed/target in the timer slot and finish when target reps are reached.',
             ),
-            value: _targetRepsWithoutTimer,
+            value: _targetRepsProgress,
             onChanged: _hasRepScoredExercise
                 ? (value) => setState(() {
-                    _targetRepsWithoutTimer = value;
+                    _targetRepsProgress = value;
                   })
                 : null,
           ),
-        ],
+        ),
         const SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
@@ -375,9 +389,7 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
                 : _startAssessment,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                _isStarting ? 'STARTING...' : 'START ASSESSMENT',
-              ),
+              child: Text(_isStarting ? 'STARTING...' : 'START ASSESSMENT'),
             ),
           ),
         ),
@@ -390,10 +402,7 @@ class _PaneShell extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const _PaneShell({
-    required this.title,
-    required this.child,
-  });
+  const _PaneShell({required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -412,10 +421,7 @@ class _PaneShell extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             child,
@@ -546,9 +552,7 @@ class _AssessmentExerciseCard extends StatelessWidget {
                   labelText: 'Target ROM',
                   border: OutlineInputBorder(),
                 ),
-                child: Text(
-                  entry.currentPlatformRomTarget ?? 'Unavailable',
-                ),
+                child: Text(entry.currentPlatformRomTarget ?? 'Unavailable'),
               ),
             ],
           ],

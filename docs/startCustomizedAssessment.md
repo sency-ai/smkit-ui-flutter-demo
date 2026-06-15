@@ -1,6 +1,6 @@
 # Start Customized Assessment Guide
 
-This guide explains how to start a customized assessment using the `flutter_smkit_ui` plugin (v1.5.1).
+This guide explains how to start a customized assessment using the `flutter_smkit_ui` plugin (v1.5.2).
 
 ## Step-by-Step: Starting a Customized Assessment
 
@@ -13,6 +13,7 @@ This guide explains how to start a customized assessment using the `flutter_smki
    Future<SMKitWorkout> getDemoAssessment() async {
      var introURL = await getFileUrl("customWorkoutIntro.mp3");
      var highKneesIntroURL = "https://github.com/sency-ai/smkit-ui-flutter-demo/raw/main/HighKneesSound.mp3";
+     const targetReps = 5;
 
      List<SMKitExercise> exercises = [
        SMKitExercise(
@@ -23,11 +24,9 @@ This guide explains how to start a customized assessment using the `flutter_smki
          uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
          detector: "HighKnees",
          exerciseClosure: null,
-         scoringParams: ScoringParams(
-           type: ScoringType.reps,
+         scoringParams: ScoringParams.targetReps(
            scoreFactor: 0.5,
-           targetReps: 30,
-           targetRom: "",
+           targetReps: targetReps,
          ),
        ),
        // Add more exercises as needed
@@ -161,9 +160,9 @@ Future<SMKitWorkout> getAssessmentWithRest() async {
    );
    ```
 
-### Target Reps Without a Visible Timer
+### Target Reps Progress
 
-For rep-scored customized assessments, set `SMKitEndExercisePreferences.targetBased` and provide `targetReps`. On iOS, the timer UI can be omitted from the exercise `uiElements`; the exercise ends when the user reaches `targetReps`.
+For rep-scored customized assessments, set `SMKitEndExercisePreferences.targetBased`, provide `targetReps`, and keep `SMKitUIElement.timer` in `uiElements`. Native SMKitUI uses the timer slot to show completed/target reps and ends the exercise when the user reaches `targetReps`.
 
 ```dart
 await _smkitUiFlutterPlugin.setEndExercisePreferences(
@@ -180,14 +179,13 @@ final assessment = SMKitWorkout(
       totalSeconds: 45,
       videoInstruction: 'SquatRegularInstructionVideo',
       uiElements: [
+        SMKitUIElement.timer,
         SMKitUIElement.repsCounter,
         SMKitUIElement.gaugeOfMotion,
       ],
-      scoringParams: ScoringParams(
-        type: ScoringType.reps,
+      scoringParams: ScoringParams.targetReps(
         scoreFactor: 0.5,
         targetReps: 5,
-        targetRom: '',
       ),
     ),
   ],
