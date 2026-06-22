@@ -1,10 +1,10 @@
 # [smkit-ui-flutter-demo](https://github.com/sency-ai/smkit-sdk)
 
-This demo is aligned with `flutter_smkit_ui` `1.5.2`.
+This demo is aligned with `flutter_smkit_ui` `1.5.3`.
 
 Native versions used by the Flutter SDK:
-- iOS: `SMKitUI` / `SMKit` `2.0.0`
-- Android: `com.sency.smkitui:smkitui` / `com.sency.smkit:smkit` `1.6.8`
+- iOS: `SMKitUI` / `SMKit` `2.0.3`
+- Android: `com.sency.smkitui:smkitui` / `com.sency.smkit:smkit` `1.7.1`
 
 The app mirrors the native iOS demo structure with a Settings screen, a Build Workout flow, assessment examples, custom assessment examples, and workout-from-program examples.
 
@@ -29,7 +29,7 @@ Add the Flutter package to your app:
 
 ```yaml
 dependencies:
-  flutter_smkit_ui: ^1.5.2
+  flutter_smkit_ui: ^1.5.3
 ```
 
 Run:

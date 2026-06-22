@@ -1,6 +1,6 @@
 # Start Customized Assessment Guide
 
-This guide explains how to start a customized assessment using the `flutter_smkit_ui` plugin (v1.5.2).
+This guide explains how to start a customized assessment using the `flutter_smkit_ui` plugin (v1.5.3).
 
 ## Step-by-Step: Starting a Customized Assessment
 
@@ -21,9 +21,10 @@ This guide explains how to start a customized assessment using the `flutter_smki
          exerciseIntro: highKneesIntroURL,
          totalSeconds: 30,
          videoInstruction: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
-         uiElements: [SMKitUIElement.timer, SMKitUIElement.repsCounter],
+         uiElements: [SMKitUIElement.repsCounter],
          detector: "HighKnees",
          exerciseClosure: null,
+         showTargetProgress: true,
          scoringParams: ScoringParams.targetReps(
            scoreFactor: 0.5,
            targetReps: targetReps,
@@ -162,7 +163,7 @@ Future<SMKitWorkout> getAssessmentWithRest() async {
 
 ### Target Reps Progress
 
-For rep-scored customized assessments, set `SMKitEndExercisePreferences.targetBased`, provide `targetReps`, and keep `SMKitUIElement.timer` in `uiElements`. Native SMKitUI uses the timer slot to show completed/target reps and ends the exercise when the user reaches `targetReps`.
+For rep-scored customized assessments, set `SMKitEndExercisePreferences.targetBased`, provide `targetReps`, and add `showTargetProgress: true`. `SMKitUIElement.timer` is no longer required for target-reps progress, so omit it when the exercise should show target progress without a countdown timer.
 
 ```dart
 await _smkitUiFlutterPlugin.setEndExercisePreferences(
@@ -179,10 +180,10 @@ final assessment = SMKitWorkout(
       totalSeconds: 45,
       videoInstruction: 'SquatRegularInstructionVideo',
       uiElements: [
-        SMKitUIElement.timer,
         SMKitUIElement.repsCounter,
         SMKitUIElement.gaugeOfMotion,
       ],
+      showTargetProgress: true,
       scoringParams: ScoringParams.targetReps(
         scoreFactor: 0.5,
         targetReps: 5,
@@ -192,7 +193,7 @@ final assessment = SMKitWorkout(
 );
 ```
 
-`totalSeconds` is still included because the native exercise payload requires it. Android currently requires `SMKitUIElement.timer` to be present for target-reps auto-ending, so the demo exposes the no-visible-timer toggle only on iOS.
+`totalSeconds` is still included because the native exercise payload requires it. With `showTargetProgress: true`, the native SDKs can render completed/target reps and end the exercise at `targetReps` without a timer UI element.
 
 3. **Start the Customized Assessment**
    ```dart
