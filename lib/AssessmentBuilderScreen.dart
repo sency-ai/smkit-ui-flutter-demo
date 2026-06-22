@@ -140,6 +140,7 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
           videoInstruction: selectedExercise.entry.videoInstruction,
           detector: selectedExercise.entry.detector,
           uiElements: _uiElementsFor(selectedExercise),
+          showTargetProgress: isTargetRepsProgress ? true : null,
           scoringParams: scoringParams,
         );
       }).toList();
@@ -185,12 +186,13 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
   ) {
     final elements = selectedExercise.entry.uiElements;
     if (!_targetRepsProgress ||
-        selectedExercise.scoringMode != AssessmentScoringMode.reps ||
-        elements.contains(SMKitUIElement.timer)) {
+        selectedExercise.scoringMode != AssessmentScoringMode.reps) {
       return elements;
     }
 
-    return [SMKitUIElement.timer, ...elements];
+    return elements
+        .where((element) => element != SMKitUIElement.timer)
+        .toList(growable: false);
   }
 
   @override
@@ -370,7 +372,7 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
             contentPadding: EdgeInsets.zero,
             title: const Text('Target reps progress'),
             subtitle: const Text(
-              'Reps-scored exercises show completed/target in the timer slot and finish when target reps are reached.',
+              'Reps-scored exercises show completed/target without the timer and finish when target reps are reached.',
             ),
             value: _targetRepsProgress,
             onChanged: _hasRepScoredExercise

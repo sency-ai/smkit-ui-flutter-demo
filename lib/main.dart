@@ -769,13 +769,10 @@ class _MyAppState extends State<MyApp> {
         exerciseIntro: null,
         totalSeconds: 45,
         videoInstruction: "SquatRegularInstructionVideo",
-        uiElements: [
-          SMKitUIElement.timer,
-          SMKitUIElement.gaugeOfMotion,
-          SMKitUIElement.repsCounter,
-        ],
+        uiElements: [SMKitUIElement.gaugeOfMotion, SMKitUIElement.repsCounter],
         detector: "SquatRegular",
         exerciseClosure: "",
+        showTargetProgress: true,
         scoringParams: ScoringParams.targetReps(
           scoreFactor: 0.5,
           targetReps: targetReps,

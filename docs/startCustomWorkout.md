@@ -1,6 +1,6 @@
 # Start Custom Workout Guide
 
-This guide explains how to start a custom workout using the `flutter_smkit_ui` plugin (v1.5.2).
+This guide explains how to start a custom workout using the `flutter_smkit_ui` plugin (v1.5.3).
 
 ## Step-by-Step: Starting a Custom Workout
 
