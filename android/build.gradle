@@ -1,9 +1,21 @@
 allprojects {
     repositories {
+        maven {
+            url uri("${rootProject.projectDir}/../../smkit_android/repo")
+        }
+        mavenLocal()
         google()
         mavenCentral()
         maven {
             url "https://artifacts.sency.ai/artifactory/release"
+        }
+    }
+
+    configurations.configureEach {
+        resolutionStrategy {
+            force "com.sency.smkitui:smkitui:1.8.0"
+            force "com.sency.smkit:smkit:1.8.0"
+            force "com.sency.smbase.nativeclient:smbase-native-client:1.8.0"
         }
     }
 }

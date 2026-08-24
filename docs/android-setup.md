@@ -1,6 +1,6 @@
 # Android Setup
 
-The demo is configured for Flutter 3.44+, Gradle 8.14, Android Gradle Plugin 8.13.2, Kotlin 2.2.20, Java 17, and minSdk 26.
+The demo is configured for Flutter 3.44+, Gradle 8.14, Android Gradle Plugin 8.13.2, Kotlin 2.2.20, Java 17, and minSdk 24 (Android 7.0).
 
 In `android/gradle/wrapper/gradle-wrapper.properties`:
 
@@ -73,7 +73,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 26
+        minSdkVersion 24
     }
 }
 
