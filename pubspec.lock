@@ -102,11 +102,10 @@ packages:
   flutter_smkit_ui:
     dependency: "direct main"
     description:
-      name: flutter_smkit_ui
-      sha256: fd9721d038c62be194f7fc5f425d8fc5067ea9e7cec891424d88a8866e6338fb
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.5.3"
+      path: "../smkit_ui_bridge_lib/flutter_smkit_ui"
+      relative: true
+    source: path
+    version: "1.5.7"
   flutter_test:
     dependency: "direct dev"
     description: flutter
