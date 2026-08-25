@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'WorkoutResultScreen.dart';
 import 'UISettingsScreen.dart';
 import 'AssessmentBuilderScreen.dart';
+import 'GuidanceModeScreen.dart';
 import 'WorkoutBuilderScreen.dart';
 import 'demo_settings.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -107,6 +108,7 @@ class _MyAppState extends State<MyApp> {
     _wfpProgramIdController.dispose();
     _wfpWeekController.dispose();
     workoutResultNotifier.removeListener(_handleWorkoutResult);
+    unawaited(_smkitUiFlutterPlugin.quitWorkout());
     super.dispose();
   }
 
@@ -122,6 +124,9 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
+    // Android-only configure-time settings (insights and timing metrics) must
+    // be queued before the native SDK is constructed.
+    await _settings.applyTo(_smkitUiFlutterPlugin);
     debugPrint('⏳ Configuring SMKitUI...');
     final result = await _smkitUiFlutterPlugin.configure(
       key: apiPublicKey,
@@ -234,6 +239,21 @@ class _MyAppState extends State<MyApp> {
                             if (mounted) setState(() {});
                           },
                         ),
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Reconfigure SDK'),
+                          onPressed: () async {
+                            await initPlatformState();
+                          },
+                        ),
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.cleaning_services_outlined),
+                          label: const Text('Clear Adaptive ROM Cache'),
+                          onPressed: () async {
+                            await _smkitUiFlutterPlugin.clearAdaptiveRomCache();
+                            debugPrint('Adaptive ROM cache cleared');
+                          },
+                        ),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () async {
@@ -244,7 +264,7 @@ class _MyAppState extends State<MyApp> {
                               return;
                             }
                             await _settings.applyTo(_smkitUiFlutterPlugin);
-                            _smkitUiFlutterPlugin.startAssessment(
+                            await _smkitUiFlutterPlugin.startAssessment(
                               type: selectedAssessmentType,
                               userData: {
                                 'gender': 'Male',
@@ -274,6 +294,21 @@ class _MyAppState extends State<MyApp> {
                             );
                           },
                           child: const Text('Build Workout'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            _navigatorKey.currentState?.push(
+                              MaterialPageRoute(
+                                builder: (_) => GuidanceModeScreen(
+                                  plugin: _smkitUiFlutterPlugin,
+                                  settings: _settings,
+                                  showSummary: showSummary,
+                                  onHandle: _handleStatus,
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text('Guidance Mode'),
                         ),
                         ElevatedButton(
                           onPressed: () {

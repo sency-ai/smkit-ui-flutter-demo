@@ -16,18 +16,25 @@ class BuiltWorkoutExercise {
   int duration;
   WorkoutPhonePositionChoice phonePositionChoice;
   WorkoutTriStateChoice guidanceChoice;
+  bool enableGuidanceModeSuggestion;
   WorkoutTriStateChoice wideAngleChoice;
   bool shortIntro;
   bool playPreExerciseCountdown;
   bool playRepMilestoneVoice;
   int repMilestoneInterval;
   bool playSoundOnEachRep;
+  bool playTargetRepsCompletionVoice;
+  bool intentVoiceFeedbackEnabled;
   bool adaptiveRomFeedbackEnabled;
   int adaptiveRomWarmupReps;
+  bool enableSmallBodyPartFocus;
   bool stretchSetEnabled;
   int stretchSetRepetitions;
   int stretchSetSeconds;
   int stretchSetRestSeconds;
+  bool positionRepEnabled;
+  int positionRepTargetReps;
+  int positionRepSeconds;
 
   BuiltWorkoutExercise({
     required this.id,
@@ -35,21 +42,28 @@ class BuiltWorkoutExercise {
     required this.duration,
     this.phonePositionChoice = WorkoutPhonePositionChoice.sdkDefault,
     this.guidanceChoice = WorkoutTriStateChoice.sdkDefault,
+    this.enableGuidanceModeSuggestion = false,
     this.wideAngleChoice = WorkoutTriStateChoice.sdkDefault,
     this.shortIntro = false,
     this.playPreExerciseCountdown = false,
     this.playRepMilestoneVoice = false,
     this.repMilestoneInterval = 10,
     this.playSoundOnEachRep = false,
+    this.playTargetRepsCompletionVoice = false,
+    this.intentVoiceFeedbackEnabled = false,
     this.adaptiveRomFeedbackEnabled = false,
     this.adaptiveRomWarmupReps = 2,
+    this.enableSmallBodyPartFocus = false,
     this.stretchSetEnabled = false,
     this.stretchSetRepetitions = 3,
     this.stretchSetSeconds = 8,
     this.stretchSetRestSeconds = 4,
+    this.positionRepEnabled = false,
+    this.positionRepTargetReps = 3,
+    this.positionRepSeconds = 5,
   });
 
-  SMKitExercise toExercise() {
+  SMKitExercise toExercise({SMKitExerciseDisplayContext? displayContext}) {
     final entry = ExerciseCatalog.byDetector[detector];
     final uiElements = entry?.uiElements ?? _fallbackUiElements;
     return SMKitExercise(
@@ -61,14 +75,19 @@ class BuiltWorkoutExercise {
       detector: detector,
       phonePosition: phonePositionChoice.phonePosition,
       guidanceMode: guidanceChoice.boolValue,
+      enableGuidanceModeSuggestion: enableGuidanceModeSuggestion,
       useWideAngleCamera: Platform.isIOS ? wideAngleChoice.boolValue : null,
       shortIntro: shortIntro,
       playPreExerciseCountdown: playPreExerciseCountdown,
       playRepMilestoneVoice: playRepMilestoneVoice,
       repMilestoneInterval: repMilestoneInterval,
       playSoundOnEachRep: playSoundOnEachRep,
+      playTargetRepsCompletionVoice: playTargetRepsCompletionVoice,
+      intentVoiceFeedbackEnabled: intentVoiceFeedbackEnabled,
       adaptiveRomFeedbackEnabled: adaptiveRomFeedbackEnabled,
       adaptiveRomWarmupReps: adaptiveRomWarmupReps,
+      enableSmallBodyPartFocus: enableSmallBodyPartFocus,
+      internalInsightsKey: detector,
       stretchSetConfig: stretchSetEnabled
           ? SMKitStretchSetConfig(
               repetitions: stretchSetRepetitions,
@@ -76,6 +95,13 @@ class BuiltWorkoutExercise {
               restSecondsBetweenStretches: stretchSetRestSeconds,
             )
           : null,
+      positionRepConfig: positionRepEnabled
+          ? SMKitPositionRepConfig(
+              targetReps: positionRepTargetReps,
+              secondsPerRep: positionRepSeconds,
+            )
+          : null,
+      displayContext: displayContext,
     );
   }
 
@@ -132,12 +158,15 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
     if (detectors.isEmpty) {
       detectors = ExerciseCatalog.byDetector.keys.toList();
     }
-    detectors = detectors
-        .where((detector) => detector.toLowerCase() != 'rowing')
-        .toSet()
-        .toList()
-      ..sort((a, b) =>
-          displayNameForDetector(a).compareTo(displayNameForDetector(b)));
+    detectors =
+        detectors
+            .where((detector) => detector.toLowerCase() != 'rowing')
+            .toSet()
+            .toList()
+          ..sort(
+            (a, b) =>
+                displayNameForDetector(a).compareTo(displayNameForDetector(b)),
+          );
     if (!mounted) return;
     setState(() {
       _availableDetectors = detectors;
@@ -162,6 +191,11 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
       id: _nextId++,
       detector: detector,
       duration: _defaultDuration(detector),
+      playTargetRepsCompletionVoice:
+          widget.settings.playTargetRepsCompletionVoice,
+      intentVoiceFeedbackEnabled: widget.settings.intentVoiceFeedbackEnabled,
+      enableGuidanceModeSuggestion: widget.settings.guidanceModeSuggestion,
+      enableSmallBodyPartFocus: widget.settings.enableSmallBodyPartFocus,
     );
     setState(() {
       if (widget.settings.enableWorkoutContinuation && _addTargetIndex == 1) {
@@ -185,7 +219,8 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
   Future<void> _startWorkout() async {
     if (_workoutExercises.isEmpty) return;
     await widget.settings.applyTo(widget.plugin);
-    final continuation = widget.settings.enableWorkoutContinuation &&
+    final continuation =
+        widget.settings.enableWorkoutContinuation &&
             _continuationExercises.isNotEmpty
         ? SMKitWorkoutContinuation(
             introSoundKey: null,
@@ -200,8 +235,13 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
         id: 'built-workout',
         name: 'Built Workout',
         workoutIntro: null,
-        exercises: _workoutExercises.map((item) => item.toExercise()).toList(),
+        exercises: _workoutExercises.asMap().entries.map((entry) {
+          return entry.value.toExercise(
+            displayContext: _displayContextFor(entry.key),
+          );
+        }).toList(),
         continuation: continuation,
+        exportInternalInsights: widget.settings.exportAssessmentInsights,
       ),
       modifications: widget.settings.modifications,
       onHandle: widget.onHandle,
@@ -239,11 +279,11 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
           TextButton(
             onPressed:
                 _workoutExercises.isEmpty && _continuationExercises.isEmpty
-                    ? null
-                    : () => setState(() {
-                          _workoutExercises.clear();
-                          _continuationExercises.clear();
-                        }),
+                ? null
+                : () => setState(() {
+                    _workoutExercises.clear();
+                    _continuationExercises.clear();
+                  }),
             child: const Text('Clear'),
           ),
         ],
@@ -358,9 +398,9 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                         onPressed: index == 0
                             ? null
                             : () => setState(() {
-                                  final moved = items.removeAt(index);
-                                  items.insert(index - 1, moved);
-                                }),
+                                final moved = items.removeAt(index);
+                                items.insert(index - 1, moved);
+                              }),
                       ),
                       IconButton(
                         tooltip: 'Move down',
@@ -368,9 +408,9 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                         onPressed: index == items.length - 1
                             ? null
                             : () => setState(() {
-                                  final moved = items.removeAt(index);
-                                  items.insert(index + 1, moved);
-                                }),
+                                final moved = items.removeAt(index);
+                                items.insert(index + 1, moved);
+                              }),
                       ),
                       IconButton(
                         tooltip: 'Remove',
@@ -395,7 +435,28 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
     }
     if (item.adaptiveRomFeedbackEnabled) flags.add('adaptive ROM');
     if (item.stretchSetEnabled) flags.add('stretch set');
+    if (item.positionRepEnabled) flags.add('position reps');
     return flags.join(' • ');
+  }
+
+  SMKitExerciseDisplayContext? _displayContextFor(int index) {
+    if (!widget.settings.exerciseProgressDisplay) return null;
+    if (index < 2) {
+      return const SMKitExerciseDisplayContext(
+        sectionTitle: 'WARM-UP',
+        playsTitleSound: true,
+      );
+    }
+    final circuitNumber = ((index - 2) ~/ 3) + 1;
+    return SMKitExerciseDisplayContext(
+      sectionTitle: 'MAIN SET',
+      playsTitleSound: true,
+      group: SMKitExerciseDisplayGroup(
+        id: 'demo-circuit-$circuitNumber',
+        kind: SMKitExerciseDisplayGroupKind.circuit,
+        number: circuitNumber,
+      ),
+    );
   }
 }
 
@@ -420,18 +481,27 @@ class _ExerciseConfigScreenState extends State<ExerciseConfigScreen> {
       duration: widget.exercise.duration,
       phonePositionChoice: widget.exercise.phonePositionChoice,
       guidanceChoice: widget.exercise.guidanceChoice,
+      enableGuidanceModeSuggestion:
+          widget.exercise.enableGuidanceModeSuggestion,
       wideAngleChoice: widget.exercise.wideAngleChoice,
       shortIntro: widget.exercise.shortIntro,
       playPreExerciseCountdown: widget.exercise.playPreExerciseCountdown,
       playRepMilestoneVoice: widget.exercise.playRepMilestoneVoice,
       repMilestoneInterval: widget.exercise.repMilestoneInterval,
       playSoundOnEachRep: widget.exercise.playSoundOnEachRep,
+      playTargetRepsCompletionVoice:
+          widget.exercise.playTargetRepsCompletionVoice,
+      intentVoiceFeedbackEnabled: widget.exercise.intentVoiceFeedbackEnabled,
       adaptiveRomFeedbackEnabled: widget.exercise.adaptiveRomFeedbackEnabled,
       adaptiveRomWarmupReps: widget.exercise.adaptiveRomWarmupReps,
+      enableSmallBodyPartFocus: widget.exercise.enableSmallBodyPartFocus,
       stretchSetEnabled: widget.exercise.stretchSetEnabled,
       stretchSetRepetitions: widget.exercise.stretchSetRepetitions,
       stretchSetSeconds: widget.exercise.stretchSetSeconds,
       stretchSetRestSeconds: widget.exercise.stretchSetRestSeconds,
+      positionRepEnabled: widget.exercise.positionRepEnabled,
+      positionRepTargetReps: widget.exercise.positionRepTargetReps,
+      positionRepSeconds: widget.exercise.positionRepSeconds,
     );
   }
 
@@ -476,6 +546,12 @@ class _ExerciseConfigScreenState extends State<ExerciseConfigScreen> {
               WorkoutTriStateChoice.values,
               (value) => setState(() => exercise.guidanceChoice = value),
             ),
+            _switchTile(
+              'Guidance suggestions for this exercise',
+              exercise.enableGuidanceModeSuggestion,
+              (value) =>
+                  setState(() => exercise.enableGuidanceModeSuggestion = value),
+            ),
             if (Platform.isIOS)
               _segmentedTile<WorkoutTriStateChoice>(
                 'Wide angle camera',
@@ -510,6 +586,25 @@ class _ExerciseConfigScreenState extends State<ExerciseConfigScreen> {
               'Sound on each rep',
               exercise.playSoundOnEachRep,
               (value) => setState(() => exercise.playSoundOnEachRep = value),
+            ),
+            _switchTile(
+              'Target-reps completion voice',
+              exercise.playTargetRepsCompletionVoice,
+              (value) => setState(
+                () => exercise.playTargetRepsCompletionVoice = value,
+              ),
+            ),
+            _switchTile(
+              'Exercise intent voice feedback',
+              exercise.intentVoiceFeedbackEnabled,
+              (value) =>
+                  setState(() => exercise.intentVoiceFeedbackEnabled = value),
+            ),
+            _switchTile(
+              'Instruction-video body-part focus',
+              exercise.enableSmallBodyPartFocus,
+              (value) =>
+                  setState(() => exercise.enableSmallBodyPartFocus = value),
             ),
             _switchTile(
               'Adaptive ROM feedback',
@@ -563,6 +658,34 @@ class _ExerciseConfigScreenState extends State<ExerciseConfigScreen> {
               's',
               (value) => setState(() => exercise.stretchSetRestSeconds = value),
             ),
+            const SizedBox(height: 12),
+            const Text(
+              'Repeated position holds',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            _switchTile(
+              'Enable repeated holds',
+              exercise.positionRepEnabled,
+              (value) => setState(() => exercise.positionRepEnabled = value),
+            ),
+            _stepperTile(
+              'Position repetitions',
+              exercise.positionRepTargetReps,
+              1,
+              10,
+              1,
+              '',
+              (value) => setState(() => exercise.positionRepTargetReps = value),
+            ),
+            _stepperTile(
+              'Seconds per hold',
+              exercise.positionRepSeconds,
+              1,
+              60,
+              1,
+              's',
+              (value) => setState(() => exercise.positionRepSeconds = value),
+            ),
           ],
         ),
       ),
@@ -597,8 +720,10 @@ class _ExerciseConfigScreenState extends State<ExerciseConfigScreen> {
                 .map(
                   (value) => ButtonSegment<T>(
                     value: value,
-                    label: Text(labelBuilder?.call(value) ??
-                        (value as Object).displayName),
+                    label: Text(
+                      labelBuilder?.call(value) ??
+                          (value as Object).displayName,
+                    ),
                   ),
                 )
                 .toList(),
@@ -662,16 +787,16 @@ String displayNameForDetector(String detector) {
 
 extension _WorkoutPhonePositionMapping on WorkoutPhonePositionChoice {
   SMKitPhonePosition? get phonePosition => switch (this) {
-        WorkoutPhonePositionChoice.sdkDefault => null,
-        WorkoutPhonePositionChoice.floor => SMKitPhonePosition.floor,
-        WorkoutPhonePositionChoice.elevated => SMKitPhonePosition.elevated,
-      };
+    WorkoutPhonePositionChoice.sdkDefault => null,
+    WorkoutPhonePositionChoice.floor => SMKitPhonePosition.floor,
+    WorkoutPhonePositionChoice.elevated => SMKitPhonePosition.elevated,
+  };
 }
 
 extension _TriStateMapping on WorkoutTriStateChoice {
   bool? get boolValue => switch (this) {
-        WorkoutTriStateChoice.sdkDefault => null,
-        WorkoutTriStateChoice.on => true,
-        WorkoutTriStateChoice.off => false,
-      };
+    WorkoutTriStateChoice.sdkDefault => null,
+    WorkoutTriStateChoice.on => true,
+    WorkoutTriStateChoice.off => false,
+  };
 }

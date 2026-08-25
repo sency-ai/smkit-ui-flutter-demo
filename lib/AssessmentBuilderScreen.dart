@@ -141,6 +141,13 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
           detector: selectedExercise.entry.detector,
           uiElements: _uiElementsFor(selectedExercise),
           showTargetProgress: isTargetRepsProgress ? true : null,
+          enableGuidanceModeSuggestion: widget.settings.guidanceModeSuggestion,
+          playTargetRepsCompletionVoice:
+              widget.settings.playTargetRepsCompletionVoice,
+          intentVoiceFeedbackEnabled:
+              widget.settings.intentVoiceFeedbackEnabled,
+          enableSmallBodyPartFocus: widget.settings.enableSmallBodyPartFocus,
+          internalInsightsKey: selectedExercise.entry.detector,
           scoringParams: scoringParams,
         );
       }).toList();
@@ -149,6 +156,7 @@ class _AssessmentBuilderScreenState extends State<AssessmentBuilderScreen> {
         id: 'demo-custom-assessment',
         name: 'Custom Assessment',
         exercises: exercises,
+        exportInternalInsights: widget.settings.exportAssessmentInsights,
       );
       if (hasTimerBasedRepExercise) {
         await widget.plugin.startCustomizedWorkout(
