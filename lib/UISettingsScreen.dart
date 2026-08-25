@@ -215,6 +215,18 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
               (value) =>
                   _changed(() => settings.playBodyCalibrationAudio = value),
             ),
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Button tutorial completion audio path',
+                border: OutlineInputBorder(),
+              ),
+              controller: TextEditingController(
+                text: settings.buttonTutorialCompletionAudioPath,
+              ),
+              onSubmitted: (value) => _changed(
+                () => settings.buttonTutorialCompletionAudioPath = value,
+              ),
+            ),
             _dropdownTile<SMKitLanguage>(
               'Session language',
               settings.sessionLanguage,
@@ -286,6 +298,24 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
               settings.enableButtonTutorial,
               (value) => _changed(() => settings.enableButtonTutorial = value),
             ),
+            _switchTile(
+              'Export exercise timing metrics (reconfigure)',
+              settings.exerciseSummaryTimingMetrics,
+              (value) =>
+                  _changed(() => settings.exerciseSummaryTimingMetrics = value),
+            ),
+            _switchTile(
+              'Download assessment insights (reconfigure)',
+              settings.includeAssessmentInsights,
+              (value) =>
+                  _changed(() => settings.includeAssessmentInsights = value),
+            ),
+            _switchTile(
+              'Export assessment insights',
+              settings.exportAssessmentInsights,
+              (value) =>
+                  _changed(() => settings.exportAssessmentInsights = value),
+            ),
             _stepperTile(
               'Continuation timer',
               settings.workoutContinuationTimerDuration,
@@ -334,6 +364,18 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
                   _changed(() => settings.useDefaultGuidanceMode = value),
             ),
             _switchTile(
+              'Guidance suggestions',
+              settings.guidanceModeSuggestion,
+              (value) =>
+                  _changed(() => settings.guidanceModeSuggestion = value),
+            ),
+            _switchTile(
+              'Instruction-video body-part focus',
+              settings.enableSmallBodyPartFocus,
+              (value) =>
+                  _changed(() => settings.enableSmallBodyPartFocus = value),
+            ),
+            _switchTile(
               'Guidance debug logging',
               settings.guidanceDebugLogging,
               (value) => _changed(() => settings.guidanceDebugLogging = value),
@@ -343,10 +385,36 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
                 labelText: 'Android config string',
                 border: OutlineInputBorder(),
               ),
-              controller:
-                  TextEditingController(text: settings.androidConfigString),
+              controller: TextEditingController(
+                text: settings.androidConfigString,
+              ),
               onSubmitted: (value) =>
                   _changed(() => settings.androidConfigString = value),
+            ),
+            _switchTile(
+              'Hide pushup knees-on-floor feedback',
+              settings.excludePushupKneesFeedback,
+              (value) =>
+                  _changed(() => settings.excludePushupKneesFeedback = value),
+            ),
+            _switchTile(
+              'Section and circuit progress display',
+              settings.exerciseProgressDisplay,
+              (value) =>
+                  _changed(() => settings.exerciseProgressDisplay = value),
+            ),
+            _switchTile(
+              'Default target-reps completion voice',
+              settings.playTargetRepsCompletionVoice,
+              (value) => _changed(
+                () => settings.playTargetRepsCompletionVoice = value,
+              ),
+            ),
+            _switchTile(
+              'Default exercise intent voice feedback',
+              settings.intentVoiceFeedbackEnabled,
+              (value) =>
+                  _changed(() => settings.intentVoiceFeedbackEnabled = value),
             ),
             _section('Pause Buttons'),
             ...SMKitPauseType.values.map(
