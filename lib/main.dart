@@ -30,9 +30,13 @@ class _MyAppState extends State<MyApp> {
   String apiPublicKey = dotenv.env['API_PUBLIC_KEY'] ?? '';
   bool showSummary = true;
   bool isConfigured = false;
+  bool isConfiguring = false;
+  String? configurationError;
   String assessmentId = '';
   AssessmentTypes selectedAssessmentType = AssessmentTypes.fitness;
-  ValueNotifier<String> workoutResultNotifier = ValueNotifier<String>("");
+  ValueNotifier<SMKitData?> workoutResultNotifier = ValueNotifier<SMKitData?>(
+    null,
+  );
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   final DemoSettings _settings = DemoSettings();
@@ -41,6 +45,9 @@ class _MyAppState extends State<MyApp> {
   bool _showWFPUI = false;
   final _wfpProgramIdController = TextEditingController(text: '');
   final _wfpWeekController = TextEditingController(text: '1');
+  final _customerAssetIdController = TextEditingController();
+  StreamSubscription<SMKitDiagnosticEvent>? _diagnosticsSubscription;
+  String? _latestDiagnostic;
   WorkoutDuration _wfpDuration = WorkoutDuration.long;
   BodyZone _wfpBodyZone = BodyZone.fullBody;
   SencySupportedLanguage _wfpLanguage = SencySupportedLanguage.english;
@@ -53,10 +60,22 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     initPlatformState();
     workoutResultNotifier.addListener(_handleWorkoutResult);
+    if (Platform.isIOS) {
+      _diagnosticsSubscription = _smkitUiFlutterPlugin.diagnostics.listen((
+        event,
+      ) {
+        debugPrint(
+          'SMKitUI diagnostic: ${event.severity}/${event.category}: ${event.message}',
+        );
+        if (mounted) {
+          setState(() => _latestDiagnostic = '${event.name}: ${event.message}');
+        }
+      });
+    }
   }
 
   void _handleWorkoutResult() {
-    if (workoutResultNotifier.value.isNotEmpty) {
+    if (workoutResultNotifier.value != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Future.delayed(const Duration(seconds: 1), () {
           _navigateToWorkoutResult();
@@ -69,7 +88,7 @@ class _MyAppState extends State<MyApp> {
     _navigatorKey.currentState?.push(
       MaterialPageRoute(
         builder: (context) =>
-            WorkoutResultScreen(workoutResult: workoutResultNotifier.value),
+            WorkoutResultScreen(workoutResult: workoutResultNotifier.value!),
       ),
     );
   }
@@ -79,7 +98,7 @@ class _MyAppState extends State<MyApp> {
     if (status.operation == SMKitOperation.assessmentSummaryData ||
         status.operation == SMKitOperation.workoutSummaryData) {
       if (status.data != null) {
-        workoutResultNotifier.value = status.data.toString();
+        workoutResultNotifier.value = status.data;
       }
     } else if (status.operation ==
         SMKitOperation.workoutContinuationPromptDidAppear) {
@@ -107,6 +126,8 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     _wfpProgramIdController.dispose();
     _wfpWeekController.dispose();
+    _customerAssetIdController.dispose();
+    _diagnosticsSubscription?.cancel();
     workoutResultNotifier.removeListener(_handleWorkoutResult);
     unawaited(_smkitUiFlutterPlugin.quitWorkout());
     super.dispose();
@@ -114,55 +135,96 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
+    if (!mounted || isConfiguring) return;
     if (apiPublicKey.trim().isEmpty) {
-      debugPrint('❌ API_PUBLIC_KEY is missing or empty');
-      setState(() => isConfigured = false);
+      setState(() {
+        isConfigured = false;
+        configurationError = 'Enter an auth key to configure SMKitUI.';
+      });
       return;
     }
 
-    // Android-only configure-time settings (insights and timing metrics) must
-    // be queued before the native SDK is constructed.
-    await _settings.applyTo(_smkitUiFlutterPlugin);
-    debugPrint('⏳ Configuring SMKitUI...');
-    final result = await _smkitUiFlutterPlugin.configure(
-      key: apiPublicKey,
-      includesHighlights: _settings.configureHighlightsOnNextLaunch,
-      // Android only: force a specific pose model instead of the adaptive default.
-      // Options: SmKitPoseModelChoice.prime | .pro | .lite | .ultraLite | .basic
-      // Example: poseModelChoice: SmKitPoseModelChoice.pro,
-      // iOS ignores this value — it uses accuratePoseEstimation (bool) in setConfig instead.
-    );
-    if (!mounted) return;
-
-    final ok = result == true;
-    debugPrint('✅ SMKitUI configure result: $result');
-    setState(() => isConfigured = ok);
-
-    if (ok) {
-      _applyDemoSettingsConfig();
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showErrorDialog(
-          'SMKitUI configuration failed. Please verify API key / connectivity.',
-        );
+    setState(() {
+      isConfiguring = true;
+      configurationError = null;
+    });
+    try {
+      // Configure-time settings must be queued before the native SDK is constructed.
+      await _settings.applyTo(_smkitUiFlutterPlugin);
+      final result = await _smkitUiFlutterPlugin.configure(
+        key: apiPublicKey.trim(),
+        customerCode: dotenv.env['CUSTOMER_CODE']?.trim().isEmpty == true
+            ? null
+            : dotenv.env['CUSTOMER_CODE']?.trim(),
+        includesHighlights: _settings.configureHighlightsOnNextLaunch,
+      );
+      if (!mounted) return;
+      final ok = result == true;
+      setState(() {
+        isConfigured = ok;
+        configurationError = ok
+            ? null
+            : 'Configuration failed. Check your auth key and connection, then retry.';
       });
+      if (ok) _applyDemoSettingsConfig();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        isConfigured = false;
+        configurationError =
+            'Configuration failed. Check your auth key and connection, then retry.';
+      });
+    } finally {
+      if (mounted) setState(() => isConfiguring = false);
     }
+  }
 
-    // Optional: set instruction video cycle (see options below)
-    // await _smkitUiFlutterPlugin.setConfig(
-    //   config: SMKitConfig(
-    //     instructionVideoConfig: InstructionVideoConfig(
-    //       displayMode: InstructionVideoDisplayMode.mediumCycle,
-    //       mediumSizeCycles: 2,
-    //     ),
-    //   ),
-    // );
-    // displayMode: InstructionVideoDisplayMode.defaultMode | InstructionVideoDisplayMode.mediumCycle
-    // mediumSizeCycles: 1–5 (used when displayMode is mediumCycle)
+  Widget _buildConfigurationStatus() {
+    if (isConfiguring) {
+      return const Column(
+        key: ValueKey('configuring'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: CircularProgressIndicator(strokeWidth: 4),
+          ),
+          SizedBox(height: 20),
+          Text(
+            'Authenticating with SMKitUI…',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: 8),
+          Text('Please wait while your SDK session is prepared.'),
+        ],
+      );
+    }
+    return Column(
+      key: const ValueKey('configuration-error'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(configurationError ?? 'SMKitUI is not configured.'),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: TextField(
+            onChanged: (value) => apiPublicKey = value,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'Auth key',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        ElevatedButton(
+          onPressed: initPlatformState,
+          child: const Text('Configure SDK'),
+        ),
+      ],
+    );
   }
 
   void _applyDemoSettingsConfig() {
@@ -182,207 +244,242 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              isConfigured
-                  ? Column(
-                      children: [
-                        // Assessment type dropdown
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text('Assessment Type: '),
-                            DropdownButton<AssessmentTypes>(
-                              value: selectedAssessmentType,
-                              items: AssessmentTypes.values.map((type) {
-                                return DropdownMenuItem(
-                                  value: type,
-                                  child: Text(type.name),
-                                );
-                              }).toList(),
-                              onChanged: (type) {
-                                if (type != null) {
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: isConfiguring || !isConfigured
+                    ? _buildConfigurationStatus()
+                    : Column(
+                        children: [
+                          // Assessment type dropdown
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('Assessment Type: '),
+                              DropdownButton<AssessmentTypes>(
+                                value: selectedAssessmentType,
+                                items: AssessmentTypes.values.map((type) {
+                                  return DropdownMenuItem(
+                                    value: type,
+                                    child: Text(type.name),
+                                  );
+                                }).toList(),
+                                onChanged: (type) {
+                                  if (type != null) {
+                                    setState(() {
+                                      selectedAssessmentType = type;
+                                    });
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                          // show summary toggle
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('Show Summary'),
+                              Switch(
+                                value: showSummary,
+                                onChanged: (val) {
                                   setState(() {
-                                    selectedAssessmentType = type;
+                                    showSummary = val;
                                   });
-                                }
-                              },
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.tune),
+                            label: const Text('UI Settings'),
+                            onPressed: () async {
+                              await _navigatorKey.currentState!.push<void>(
+                                MaterialPageRoute(
+                                  builder: (_) => UISettingsScreen(
+                                    plugin: _smkitUiFlutterPlugin,
+                                    settings: _settings,
+                                  ),
+                                ),
+                              );
+                              if (mounted) setState(() {});
+                            },
+                          ),
+                          OutlinedButton.icon(
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Reconfigure SDK'),
+                            onPressed: () async {
+                              await initPlatformState();
+                            },
+                          ),
+                          OutlinedButton.icon(
+                            icon: const Icon(Icons.cleaning_services_outlined),
+                            label: const Text('Clear Adaptive ROM Cache'),
+                            onPressed: () async {
+                              await _smkitUiFlutterPlugin
+                                  .clearAdaptiveRomCache();
+                              debugPrint('Adaptive ROM cache cleared');
+                            },
+                          ),
+                          if (Platform.isIOS)
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.download_outlined),
+                              label: const Text('Preload models in background'),
+                              onPressed: () async =>
+                                  _smkitUiFlutterPlugin.preloadModels(),
                             ),
-                          ],
-                        ),
-                        // show summary toggle
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text('Show Summary'),
-                            Switch(
-                              value: showSummary,
-                              onChanged: (val) {
+                          TextField(
+                            controller: _customerAssetIdController,
+                            decoration: const InputDecoration(
+                              labelText: 'Customer asset identifier',
+                            ),
+                          ),
+                          OutlinedButton.icon(
+                            icon: const Icon(Icons.folder_open),
+                            label: const Text('Get customer asset path'),
+                            onPressed: () async {
+                              final identifier = _customerAssetIdController.text
+                                  .trim();
+                              if (identifier.isEmpty) return;
+                              final path = await _smkitUiFlutterPlugin
+                                  .requestCustomerAssetPath(
+                                    identifier: identifier,
+                                  );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      path ?? 'Customer asset unavailable',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          if (_latestDiagnostic != null)
+                            Text('Latest diagnostic: $_latestDiagnostic'),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (!isConfigured) {
+                                _showErrorDialog(
+                                  'Plugin not configured yet. Please wait for configuration to complete.',
+                                );
+                                return;
+                              }
+                              await _settings.applyTo(_smkitUiFlutterPlugin);
+                              await _smkitUiFlutterPlugin.startAssessment(
+                                type: selectedAssessmentType,
+                                userData: {
+                                  'gender': 'Male',
+                                  'birthday': DateTime(
+                                    1990,
+                                    1,
+                                    1,
+                                  ).millisecondsSinceEpoch,
+                                },
+                                showSummary: showSummary,
+                                modifications: currentModifications,
+                                onHandle: _handleStatus,
+                              );
+                            },
+                            child: const Text('Start Sency Assessment'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              _navigatorKey.currentState?.push(
+                                MaterialPageRoute(
+                                  builder: (_) => WorkoutBuilderScreen(
+                                    plugin: _smkitUiFlutterPlugin,
+                                    settings: _settings,
+                                    onHandle: _handleStatus,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text('Build Workout'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              _navigatorKey.currentState?.push(
+                                MaterialPageRoute(
+                                  builder: (_) => GuidanceModeScreen(
+                                    plugin: _smkitUiFlutterPlugin,
+                                    settings: _settings,
+                                    showSummary: showSummary,
+                                    onHandle: _handleStatus,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text('Guidance Mode'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (!isConfigured) {
+                                _showErrorDialog(
+                                  'Plugin not configured yet. Please wait for configuration to complete.',
+                                );
+                                return;
+                              }
+                              _navigatorKey.currentState?.push(
+                                MaterialPageRoute(
+                                  builder: (_) => AssessmentBuilderScreen(
+                                    plugin: _smkitUiFlutterPlugin,
+                                    settings: _settings,
+                                    showSummary: showSummary,
+                                    onHandle: _handleStatus,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text('Customized Assessment'),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: TextField(
+                              onChanged: (value) {
                                 setState(() {
-                                  showSummary = val;
+                                  assessmentId = value;
                                 });
                               },
+                              decoration: const InputDecoration(
+                                labelText: 'Assessment ID',
+                              ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.tune),
-                          label: const Text('UI Settings'),
-                          onPressed: () async {
-                            await _navigatorKey.currentState!.push<void>(
-                              MaterialPageRoute(
-                                builder: (_) => UISettingsScreen(
-                                  plugin: _smkitUiFlutterPlugin,
-                                  settings: _settings,
-                                ),
-                              ),
-                            );
-                            if (mounted) setState(() {});
-                          },
-                        ),
-                        OutlinedButton.icon(
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Reconfigure SDK'),
-                          onPressed: () async {
-                            await initPlatformState();
-                          },
-                        ),
-                        OutlinedButton.icon(
-                          icon: const Icon(Icons.cleaning_services_outlined),
-                          label: const Text('Clear Adaptive ROM Cache'),
-                          onPressed: () async {
-                            await _smkitUiFlutterPlugin.clearAdaptiveRomCache();
-                            debugPrint('Adaptive ROM cache cleared');
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () async {
-                            if (!isConfigured) {
-                              _showErrorDialog(
-                                'Plugin not configured yet. Please wait for configuration to complete.',
+                          ),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (!isConfigured) {
+                                _showErrorDialog(
+                                  'Plugin not configured yet. Please wait for configuration to complete.',
+                                );
+                                return;
+                              }
+                              debugPrint('Custom Assessment ID: $assessmentId');
+                              await _settings.applyTo(_smkitUiFlutterPlugin);
+                              _smkitUiFlutterPlugin.startAssessment(
+                                type: AssessmentTypes.custom,
+                                assessmentID: assessmentId == ""
+                                    ? null
+                                    : assessmentId,
+                                modifications: currentModifications,
+                                onHandle: _handleStatus,
                               );
-                              return;
-                            }
-                            await _settings.applyTo(_smkitUiFlutterPlugin);
-                            await _smkitUiFlutterPlugin.startAssessment(
-                              type: selectedAssessmentType,
-                              userData: {
-                                'gender': 'Male',
-                                'birthday': DateTime(
-                                  1990,
-                                  1,
-                                  1,
-                                ).millisecondsSinceEpoch,
-                              },
-                              showSummary: showSummary,
-                              modifications: currentModifications,
-                              onHandle: _handleStatus,
-                            );
-                          },
-                          child: const Text('Start Sency Assessment'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            _navigatorKey.currentState?.push(
-                              MaterialPageRoute(
-                                builder: (_) => WorkoutBuilderScreen(
-                                  plugin: _smkitUiFlutterPlugin,
-                                  settings: _settings,
-                                  onHandle: _handleStatus,
-                                ),
-                              ),
-                            );
-                          },
-                          child: const Text('Build Workout'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            _navigatorKey.currentState?.push(
-                              MaterialPageRoute(
-                                builder: (_) => GuidanceModeScreen(
-                                  plugin: _smkitUiFlutterPlugin,
-                                  settings: _settings,
-                                  showSummary: showSummary,
-                                  onHandle: _handleStatus,
-                                ),
-                              ),
-                            );
-                          },
-                          child: const Text('Guidance Mode'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (!isConfigured) {
-                              _showErrorDialog(
-                                'Plugin not configured yet. Please wait for configuration to complete.',
-                              );
-                              return;
-                            }
-                            _navigatorKey.currentState?.push(
-                              MaterialPageRoute(
-                                builder: (_) => AssessmentBuilderScreen(
-                                  plugin: _smkitUiFlutterPlugin,
-                                  settings: _settings,
-                                  showSummary: showSummary,
-                                  onHandle: _handleStatus,
-                                ),
-                              ),
-                            );
-                          },
-                          child: const Text('Customized Assessment'),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: TextField(
-                            onChanged: (value) {
-                              setState(() {
-                                assessmentId = value;
-                              });
                             },
-                            decoration: const InputDecoration(
-                              labelText: 'Assessment ID',
+                            child: const Text('Custom Assessment'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() => _showWFPUI = true);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[600],
                             ),
+                            child: const Text('Workout From Program'),
                           ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () async {
-                            if (!isConfigured) {
-                              _showErrorDialog(
-                                'Plugin not configured yet. Please wait for configuration to complete.',
-                              );
-                              return;
-                            }
-                            debugPrint('Custom Assessment ID: $assessmentId');
-                            await _settings.applyTo(_smkitUiFlutterPlugin);
-                            _smkitUiFlutterPlugin.startAssessment(
-                              type: AssessmentTypes.custom,
-                              assessmentID: assessmentId == ""
-                                  ? null
-                                  : assessmentId,
-                              modifications: currentModifications,
-                              onHandle: _handleStatus,
-                            );
-                          },
-                          child: const Text('Custom Assessment'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() => _showWFPUI = true);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[600],
-                          ),
-                          child: const Text('Workout From Program'),
-                        ),
-                      ],
-                    )
-                  : const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("Configuring.."),
-                        CircularProgressIndicator(),
-                      ],
-                    ),
+                        ],
+                      ),
+              ),
             ],
           ),
         ),
