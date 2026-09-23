@@ -1,9 +1,5 @@
 allprojects {
     repositories {
-        maven {
-            url uri("${rootProject.projectDir}/../../smkit_android/repo")
-        }
-        mavenLocal()
         google()
         mavenCentral()
         maven {
@@ -11,13 +7,7 @@ allprojects {
         }
     }
 
-    configurations.configureEach {
-        resolutionStrategy {
-            force "com.sency.smkitui:smkitui:1.8.0"
-            force "com.sency.smkit:smkit:1.8.0"
-            force "com.sency.smbase.nativeclient:smbase-native-client:1.8.0"
-        }
-    }
+
 }
 
 rootProject.buildDir = '../build'
