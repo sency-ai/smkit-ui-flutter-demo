@@ -1,9 +1,14 @@
 allprojects {
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
         maven {
             url "https://artifacts.sency.ai/artifactory/release"
+            content {
+                includeGroupByRegex("com\\.sency.*")
+                includeVersion("androidx.camera", "camera-core", "1.1.0.1-sency16kb")
+            }
         }
     }
 

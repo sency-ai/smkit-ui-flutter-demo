@@ -34,9 +34,7 @@ class _MyAppState extends State<MyApp> {
   String? configurationError;
   String assessmentId = '';
   AssessmentTypes selectedAssessmentType = AssessmentTypes.fitness;
-  ValueNotifier<SMKitData?> workoutResultNotifier = ValueNotifier<SMKitData?>(
-    null,
-  );
+  ValueNotifier<Object?> workoutResultNotifier = ValueNotifier<Object?>(null);
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   final DemoSettings _settings = DemoSettings();
@@ -153,6 +151,7 @@ class _MyAppState extends State<MyApp> {
       await _settings.applyTo(_smkitUiFlutterPlugin);
       final result = await _smkitUiFlutterPlugin.configure(
         key: apiPublicKey.trim(),
+        configureLanguage: _settings.sessionLanguage,
         customerCode: dotenv.env['CUSTOMER_CODE']?.trim().isEmpty == true
             ? null
             : dotenv.env['CUSTOMER_CODE']?.trim(),
@@ -585,6 +584,13 @@ class _MyAppState extends State<MyApp> {
                 children: [
                   Expanded(
                     child: ChoiceChip(
+                      label: const Text('Mandarin'),
+                      selected: _wfpLanguage == SencySupportedLanguage.mandarin,
+                      onSelected: (_) => setState(() => _wfpLanguage = SencySupportedLanguage.mandarin),
+                    ),
+                  ),
+                  Expanded(
+                    child: ChoiceChip(
                       label: const Text('Hebrew'),
                       selected: _wfpLanguage == SencySupportedLanguage.hebrew,
                       onSelected: (_) => setState(
@@ -677,9 +683,11 @@ class _MyAppState extends State<MyApp> {
         _showErrorDialog('Please enter a Program ID.');
         return;
       }
-      final smkitLang = _wfpLanguage == SencySupportedLanguage.hebrew
-          ? SMKitLanguage.hebrew
-          : SMKitLanguage.english;
+      final smkitLang = switch (_wfpLanguage) {
+        SencySupportedLanguage.hebrew => SMKitLanguage.hebrew,
+        SencySupportedLanguage.mandarin => SMKitLanguage.mandarin,
+        _ => SMKitLanguage.english,
+      };
       _settings.sessionLanguage = smkitLang;
       await _settings.applyTo(_smkitUiFlutterPlugin);
       final config = WorkoutConfig(

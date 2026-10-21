@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 
 class WorkoutResultScreen extends StatelessWidget {
-  final SMKitData workoutResult;
+  final Object workoutResult;
 
   const WorkoutResultScreen({super.key, required this.workoutResult});
 
@@ -54,6 +54,8 @@ class WorkoutResultScreen extends StatelessWidget {
               ),
             if (exercise.timeInPosition != null)
               Text('Time in position: ${exercise.timeInPosition}s'),
+            if (exercise.adaptiveRom != null)
+              Text('Adaptive ROM: ${exercise.adaptiveRom}'),
             if (exercise.positionRepConfig != null)
               Text('Position reps: ${exercise.positionRepConfig}'),
             if (exercise.avgRepTimeSeconds != null)
