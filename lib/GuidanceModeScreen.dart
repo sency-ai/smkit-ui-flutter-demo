@@ -47,7 +47,7 @@ class _GuidanceModeScreenState extends State<GuidanceModeScreen> {
     try {
       detectors = await widget.plugin.getSupportedMovements() ?? [];
     } catch (_) {
-      // Android 1.8.0 does not expose the catalog through SMKitUI. Its static
+      // Android SMKitUI does not expose the catalog through the Flutter bridge. Its static
       // catalog keeps this demo flow available there as well.
       detectors = [];
     }
@@ -88,7 +88,7 @@ class _GuidanceModeScreenState extends State<GuidanceModeScreen> {
     setState(() => _startingDetector = detector);
     try {
       // getExerciseType is part of the iOS demo's runtime catalog. Android
-      // 1.8.0 falls back to the bundled catalog until the native UI API offers
+      // Android falls back to the bundled catalog until the native UI API offers
       // the same accessor.
       final nativeType = Platform.isIOS
           ? await widget.plugin.getExerciseType(detector: detector)

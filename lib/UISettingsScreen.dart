@@ -192,6 +192,18 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
               precision: 3,
             ),
             _section('Audio and Calibration'),
+            _dropdownTile<SMKitFeedbackFrequency>(
+              'Coaching feedback frequency',
+              settings.feedbackFrequency,
+              DemoSettings.feedbackFrequencyOptions,
+              (value) => _changed(() => settings.feedbackFrequency = value),
+            ),
+            _dropdownTile<SMKitVoice>(
+              'Feedback voice (reconfigure)',
+              settings.voiceFeedbackVoice,
+              DemoSettings.voiceOptions,
+              (value) => _changed(() => settings.voiceFeedbackVoice = value),
+            ),
             _switchTile(
               'Allow audio mixing',
               settings.allowAudioMixing,
@@ -311,6 +323,17 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
                   _changed(() => settings.includeAssessmentInsights = value),
             ),
             _switchTile(
+              'Automatically preload models (iOS)',
+              settings.automaticallyPreloadModels,
+              (value) =>
+                  _changed(() => settings.automaticallyPreloadModels = value),
+            ),
+            _switchTile(
+              'Emit diagnostics (iOS)',
+              settings.enableDiagnostics,
+              (value) => _changed(() => settings.enableDiagnostics = value),
+            ),
+            _switchTile(
               'Export assessment insights',
               settings.exportAssessmentInsights,
               (value) =>
@@ -356,7 +379,7 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
               (value) =>
                   _changed(() => settings.instructionMediumCycles = value),
             ),
-            _section('Android Guidance'),
+            _section('Guidance'),
             _switchTile(
               'Use default guidance mode',
               settings.useDefaultGuidanceMode,

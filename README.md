@@ -1,10 +1,10 @@
 # [smkit-ui-flutter-demo](https://github.com/sency-ai/smkit-sdk)
 
-This demo is aligned with `flutter_smkit_ui` `1.5.7` (local workspace link below).
+This demo uses the published `flutter_smkit_ui` `1.6.0` release.
 
 Native versions used by the Flutter SDK:
-- iOS: `SMKitUI` / `SMKit` `2.3.6`
-- Android: `com.sency.smkitui:smkitui` / `com.sency.smkit:smkit` `1.8.0` (Android 7.0 / API 24+)
+- iOS: `SMKitUI` / `SMKit` `2.5.1`
+- Android: `com.sency.smkitui:smkitui` / `com.sency.smkit:smkit` / `com.sency.smbase.nativeclient:smbase-native-client` `1.9.4` (Android 7.0 / API 24+)
 
 The app mirrors the native iOS demo structure with a Settings screen, a Build Workout flow, assessment examples, custom assessment examples, and workout-from-program examples.
 
@@ -29,15 +29,17 @@ Add the Flutter package to your app:
 
 ```yaml
 dependencies:
-  flutter_smkit_ui:
-    path: ../smkit_ui_bridge_lib/flutter_smkit_ui
+  flutter_smkit_ui: 1.6.0
 ```
 
 Run:
 
 ```sh
+cp .env.example .env
 flutter pub get
 ```
+
+Enter your auth key in the app or set `API_PUBLIC_KEY` in `.env`. The `.env` file is ignored by Git but is required as a Flutter asset for local builds.
 
 ## Setup
 
@@ -45,6 +47,8 @@ flutter pub get
 - [iOS Setup](docs/ios-setup.md)
 
 The native setup must include camera permissions and the platform-specific dependency setup described in those guides.
+
+The demo resolves Flutter 1.6.0 from pub.dev, Android 1.9.4 from the Sency artifact repository, and iOS 2.5.1 through CocoaPods.
 
 ## Configure
 
@@ -55,6 +59,7 @@ final smkit = SmkitUiFlutterPlugin();
 
 await smkit.configure(
   key: 'YOUR_AUTH_KEY',
+  customerCode: 'YOUR_CUSTOMER_CODE', // optional, for customer assets
   includesHighlights: false,
 );
 ```
@@ -62,6 +67,11 @@ await smkit.configure(
 To reduce wait time, call `configure` before the user starts an assessment or workout.
 
 **Important:** SMKitUI will not start a session until `configure` succeeds.
+In the app, `CUSTOMER_CODE` can be supplied in `.env`. UI Settings includes
+configure-time voice choices, coaching frequency, diagnostics, and model preload
+controls. The result screen shows exercise timing, position-rep data, and assessment
+insights when the native SDK returns them. The guidance picker intentionally keeps
+its existing detector catalog for this release.
 
 ## Start
 

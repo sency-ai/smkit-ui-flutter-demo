@@ -64,6 +64,10 @@ class DemoSettings {
   bool guidanceDebugLogging = false;
   bool exerciseSummaryTimingMetrics = false;
   bool includeAssessmentInsights = false;
+  SMKitFeedbackFrequency feedbackFrequency = SMKitFeedbackFrequency.normal;
+  SMKitVoice voiceFeedbackVoice = SMKitVoice.male1;
+  bool automaticallyPreloadModels = true;
+  bool enableDiagnostics = false;
   bool exportAssessmentInsights = false;
   bool excludePushupKneesFeedback = true;
   bool exerciseProgressDisplay = false;
@@ -83,6 +87,8 @@ class DemoSettings {
   static const skeletonConnectionOptions = SkeletonConnectionStyle.values;
   static const skeletonJointOptions = SkeletonJointShape.values;
   static const skeletonColorOptions = SkeletonColorOption.values;
+  static const feedbackFrequencyOptions = SMKitFeedbackFrequency.values;
+  static const voiceOptions = SMKitVoice.values;
 
   Map<String, dynamic> get modifications => {
     'primaryColor': colorTheme.hexColor,
@@ -140,6 +146,10 @@ class DemoSettings {
     ),
     useDefaultGuidanceMode: useDefaultGuidanceMode,
     guidanceModeSuggestion: guidanceModeSuggestion,
+    feedbackFrequency: feedbackFrequency,
+    voiceFeedbackVoice: voiceFeedbackVoice,
+    automaticallyPreloadModels: automaticallyPreloadModels,
+    enableDiagnostics: enableDiagnostics,
     enableSmallBodyPartFocus: enableSmallBodyPartFocus,
     guidanceDebugLogging: guidanceDebugLogging,
     androidConfigString: androidConfigString.trim().isEmpty
@@ -195,6 +205,8 @@ extension DemoDisplayNames on Object {
       DemoCounterPreference value =>
         value == DemoCounterPreference.perfectOnly ? 'perfect only' : 'default',
       SMKitPauseType value => value.name,
+      SMKitFeedbackFrequency value => value.name,
+      SMKitVoice value => value == SMKitVoice.male1 ? 'Male 1' : 'Female 1',
       _ => toString(),
     };
     return name
