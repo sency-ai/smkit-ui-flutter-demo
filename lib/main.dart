@@ -32,7 +32,7 @@ class _MyAppState extends State<MyApp> {
   bool isConfigured = false;
   String assessmentId = '';
   AssessmentTypes selectedAssessmentType = AssessmentTypes.fitness;
-  ValueNotifier<String> workoutResultNotifier = ValueNotifier<String>("");
+  ValueNotifier<Object?> workoutResultNotifier = ValueNotifier<Object?>(null);
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   final DemoSettings _settings = DemoSettings();
@@ -56,7 +56,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _handleWorkoutResult() {
-    if (workoutResultNotifier.value.isNotEmpty) {
+    if (workoutResultNotifier.value != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Future.delayed(const Duration(seconds: 1), () {
           _navigateToWorkoutResult();
@@ -69,7 +69,7 @@ class _MyAppState extends State<MyApp> {
     _navigatorKey.currentState?.push(
       MaterialPageRoute(
         builder: (context) =>
-            WorkoutResultScreen(workoutResult: workoutResultNotifier.value),
+            WorkoutResultScreen(workoutResult: workoutResultNotifier.value!),
       ),
     );
   }
@@ -79,7 +79,7 @@ class _MyAppState extends State<MyApp> {
     if (status.operation == SMKitOperation.assessmentSummaryData ||
         status.operation == SMKitOperation.workoutSummaryData) {
       if (status.data != null) {
-        workoutResultNotifier.value = status.data.toString();
+        workoutResultNotifier.value = status.data;
       }
     } else if (status.operation ==
         SMKitOperation.workoutContinuationPromptDidAppear) {
@@ -130,6 +130,7 @@ class _MyAppState extends State<MyApp> {
     debugPrint('⏳ Configuring SMKitUI...');
     final result = await _smkitUiFlutterPlugin.configure(
       key: apiPublicKey,
+      configureLanguage: _settings.sessionLanguage,
       includesHighlights: _settings.configureHighlightsOnNextLaunch,
       // Android only: force a specific pose model instead of the adaptive default.
       // Options: SmKitPoseModelChoice.prime | .pro | .lite | .ultraLite | .basic
@@ -488,6 +489,13 @@ class _MyAppState extends State<MyApp> {
                 children: [
                   Expanded(
                     child: ChoiceChip(
+                      label: const Text('Mandarin'),
+                      selected: _wfpLanguage == SencySupportedLanguage.mandarin,
+                      onSelected: (_) => setState(() => _wfpLanguage = SencySupportedLanguage.mandarin),
+                    ),
+                  ),
+                  Expanded(
+                    child: ChoiceChip(
                       label: const Text('Hebrew'),
                       selected: _wfpLanguage == SencySupportedLanguage.hebrew,
                       onSelected: (_) => setState(
@@ -580,9 +588,11 @@ class _MyAppState extends State<MyApp> {
         _showErrorDialog('Please enter a Program ID.');
         return;
       }
-      final smkitLang = _wfpLanguage == SencySupportedLanguage.hebrew
-          ? SMKitLanguage.hebrew
-          : SMKitLanguage.english;
+      final smkitLang = switch (_wfpLanguage) {
+        SencySupportedLanguage.hebrew => SMKitLanguage.hebrew,
+        SencySupportedLanguage.mandarin => SMKitLanguage.mandarin,
+        _ => SMKitLanguage.english,
+      };
       _settings.sessionLanguage = smkitLang;
       await _settings.applyTo(_smkitUiFlutterPlugin);
       final config = WorkoutConfig(
