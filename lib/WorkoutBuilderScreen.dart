@@ -70,7 +70,7 @@ class BuiltWorkoutExercise {
       prettyName: displayNameForDetector(detector),
       totalSeconds: duration,
       videoInstruction:
-          entry?.videoInstruction ?? '${detector}InstructionVideo',
+          entry?.videoInstruction ?? detector,
       uiElements: uiElements,
       detector: detector,
       phonePosition: phonePositionChoice.phonePosition,

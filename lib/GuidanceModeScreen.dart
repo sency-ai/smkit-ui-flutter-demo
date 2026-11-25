@@ -117,7 +117,7 @@ class _GuidanceModeScreenState extends State<GuidanceModeScreen> {
               prettyName: _displayNameForDetector(detector),
               totalSeconds: isDynamic ? 30 : 10,
               videoInstruction:
-                  entry?.videoInstruction ?? '${detector}InstructionVideo',
+                  entry?.videoInstruction ?? detector,
               detector: detector,
               uiElements: uiElements,
               guidanceMode: true,

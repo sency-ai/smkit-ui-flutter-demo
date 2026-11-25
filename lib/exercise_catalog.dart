@@ -47,7 +47,10 @@ class ExerciseCatalogEntry {
 
   AssessmentScoringMode get defaultAssessmentMode => assessmentModes.first;
 
-  String get videoInstruction => '${detector}InstructionVideo';
+  // Use the bare detector name. SMKitUI 2.7.3 only applies its reviewed
+  // guidance cuts when the video name equals the detector; the
+  // `InstructionVideo` suffix made guidance play the whole demo clip.
+  String get videoInstruction => detector;
 
   String? get currentPlatformRomTarget => romTarget?.forCurrentPlatform();
 }

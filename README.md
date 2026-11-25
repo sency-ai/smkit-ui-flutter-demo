@@ -1,12 +1,12 @@
 # [smkit-ui-flutter-demo](https://github.com/sency-ai/smkit-sdk)
 
-This demo uses the published `flutter_smkit_ui` `1.6.0` release.
+This demo uses the `flutter_smkit_ui` `1.6.2` release.
 
 Native versions used by the Flutter SDK:
-- iOS: `SMKitUI` / `SMKit` `2.5.1`
-- Android: `com.sency.smkitui:smkitui` / `com.sency.smkit:smkit` / `com.sency.smbase.nativeclient:smbase-native-client` `1.9.4` (Android 7.0 / API 24+)
+- iOS: `SMKitUI` / `SMKit` `2.7.3` (iOS 16+)
+- Android: `com.sency.smkitui:smkitui` / `com.sency.smkit:smkit` / `com.sency.smbase.nativeclient:smbase-native-client` `1.9.9` (Android 7.0 / API 24+)
 
-The app mirrors the native iOS demo structure with a Settings screen, a Build Workout flow, assessment examples, custom assessment examples, and workout-from-program examples.
+The app mirrors the native iOS demo structure with a Settings screen, a Build Workout flow, assessment examples, custom assessment examples, workout-from-program examples, feature examples, SDK tools, live workout controls and an event log.
 
 ## Table of Contents
 
@@ -20,8 +20,10 @@ The app mirrors the native iOS demo structure with a Settings screen, a Build Wo
 8. [Setting Pause Types](#setting-pause-types)
 9. [Advanced Configuration](#advanced-configuration)
 10. [Exercise and Workout Options](#exercise-and-workout-options)
-11. [Platform Notes](#platform-notes)
-12. [Customer Update](#customer-update)
+11. [Feature Examples](#feature-examples)
+12. [Live Controls and Events](#live-controls-and-events)
+13. [SDK Tools](#sdk-tools)
+14. [Platform Notes](#platform-notes)
 
 ## Installation
 
@@ -29,7 +31,7 @@ Add the Flutter package to your app:
 
 ```yaml
 dependencies:
-  flutter_smkit_ui: 1.6.0
+  flutter_smkit_ui: 1.6.2
 ```
 
 Run:
@@ -48,7 +50,7 @@ Enter your auth key in the app or set `API_PUBLIC_KEY` in `.env`. The `.env` fil
 
 The native setup must include camera permissions and the platform-specific dependency setup described in those guides.
 
-The demo resolves Flutter 1.6.0 from pub.dev, Android 1.9.4 from the Sency artifact repository, and iOS 2.5.1 through CocoaPods.
+The demo resolves Flutter 1.6.2 from pub.dev, Android 1.9.9 from the Sency artifact repository, and iOS 2.7.3 through CocoaPods.
 
 ## Configure
 
@@ -66,6 +68,18 @@ await smkit.configure(
 
 To reduce wait time, call `configure` before the user starts an assessment or workout.
 
+`configure` also chooses how models load. These options are read only by `configure`, so the demo's UI Settings › Configure section applies them on the next launch or when you tap Reconfigure SDK:
+
+```dart
+await smkit.configure(
+  key: 'YOUR_AUTH_KEY',
+  poseModelChoice: SmKitPoseModelChoice.adaptiveChoice, // Android only
+  // iOS only: Android 1.9.9 rejects non-default values for these two.
+  includesObjectDetectionFeedbacks: true,
+  modelDownloadPolicy: SMKitModelDownloadPolicy.immediateFallback,
+);
+```
+
 **Important:** SMKitUI will not start a session until `configure` succeeds.
 In the app, `CUSTOMER_CODE` can be supplied in `.env`. UI Settings includes
 configure-time voice choices, coaching frequency, diagnostics, and model preload
@@ -82,6 +96,7 @@ The demo includes examples for the main SDK entry points:
 - [Start Customized Assessment](docs/startCustomizedAssessment.md)
 - Workout From Program, implemented in [lib/main.dart](lib/main.dart)
 - Build Workout, implemented in [lib/WorkoutBuilderScreen.dart](lib/WorkoutBuilderScreen.dart)
+- Feature Examples, implemented in [lib/FeatureExamplesScreen.dart](lib/FeatureExamplesScreen.dart)
 
 ### Start Assessment
 
@@ -155,7 +170,7 @@ await smkit.setFeedbacksUiToExclude(
 );
 ```
 
-You can also exclude feedback from data and UI where supported:
+On iOS you can also stop the SDK from detecting a feedback at all. The demo's UI Settings screen has an "Excluded feedbacks" field for this:
 
 ```dart
 await smkit.setExcludedFeedbacks(
@@ -163,7 +178,7 @@ await smkit.setExcludedFeedbacks(
 );
 ```
 
-Platform note: data-level feedback exclusion depends on the native platform support. UI-only exclusion is the safer cross-platform default.
+Platform note: `setExcludedFeedbacks` is iOS-only. `setFeedbacksUiToExclude` works on both platforms.
 
 ## Setting Text Language
 
@@ -174,7 +189,7 @@ await smkit.setSessionLanguage(language: SMKitLanguage.english);
 await smkit.setPhoneCalibrationLanguage(language: SMKitLanguage.english);
 ```
 
-Currently advertised demo languages are English and Hebrew.
+The SDK supports English, Hebrew and Mandarin (`SMKitLanguage.mandarin`).
 
 ## Setting Pause Types
 
@@ -243,14 +258,48 @@ await smkit.setConfig(
 );
 ```
 
+### Mobility Flow and Holds
+
+```dart
+await smkit.setConfig(
+  config: const SMKitConfig(
+    mobilityFlowVoice: SMKitVoice.female1,
+    mobilityFlowHoldIndicatorStyle: MobilityFlowHoldIndicatorStyle.liquidGlass,
+    holdPositionSoundEnabled: true,
+    positionExitVocalsEnabled: false,
+    // iOS only; Android rejects setConfig when these are present.
+    enablePerExerciseBodyCalibration: true,
+    showAllSkeletonKeypoints: true,
+  ),
+);
+```
+
+On Android, the voice, hold sound and position-exit vocals take effect after `configure` runs again.
+
+### Object Detection and Rowing (iOS)
+
+```dart
+await smkit.setConfig(
+  config: const SMKitConfig(
+    // Body calibration waits until it sees each required object class.
+    enableBodyCalibrationObjectDetection: true,
+    bodyCalibrationRequiredObjectClasses: ['YOUR_OBJECT_CLASS'],
+    enableObjectDetectionFeedbacks: true,
+    showRowingPhoneCalibration: true,
+  ),
+);
+```
+
+The demo's "Object detection feedbacks" switch sets both `enableObjectDetectionFeedbacks` and configure's `includesObjectDetectionFeedbacks`. Android rejects `setConfig` when the object-detection keys are present, so the demo sends them only on iOS.
+
 ### Runtime Controls
 
 ```dart
 await smkit.quitWorkout();
-await smkit.clearAdaptiveRomCache();
+await smkit.pauseSdk();
+await smkit.resumeSdk();
+await smkit.clearAdaptiveRomCache(); // Android only
 ```
-
-Platform note: `pauseSdk()` and `resumeSdk()` are iOS-only. On Android, use the in-session pause UI.
 
 ## Exercise and Workout Options
 
@@ -341,11 +390,93 @@ final workout = SMKitWorkout(
 
 The demo Build Workout mode does not attach custom workout sounds.
 
+## Feature Examples
+
+The Feature Examples screen starts one-exercise workouts that show exercise options the builder does not. Each card can also run `prepareWorkout` first to download its assets.
+
+- **Mobility Flow**: a 10-second rhomboid stretch hold, then 3 butterfly reps.
+
+  ```dart
+  SMKitExercise.mobilityFlow(const SMKitMobilityFlowConfig([
+    SMKitMobilityFlowBlock.hold('RhomboidStretch', repetitions: 1, secondsPerRep: 10),
+    SMKitMobilityFlowBlock.reps('ButterflyPose', targetReps: 3),
+  ]));
+  ```
+
+- **Mobility Flow without the 5-second cue**: two rhomboid stretch holds with `fiveSecondsLeftCueEnabled: false`.
+- **Mobility reps**: butterfly pose counted as reps with `mobilityRepConfig: SMKitMobilityRepConfig(targetReps: 6)`.
+- **Combination**: `Combo04` with `SMKitCombinationOptions(firstReps: 2, secondReps: 1, fixedSide: SMKitCombinationSide.left)`.
+- **Quick motion**: high knees with `SMKitUIElement.quickMotion` and `SMKitQuickMotionParams`.
+- **Stretch set with alternating positions**: `LumbarCamelCatSeated` as two sets of 5-second holds. The SDK alternates camel and cat from the detector; `positionDetectors` names both positions in the results.
+
+  ```dart
+  stretchSetConfig: const SMKitStretchSetConfig(
+    repetitions: 2,
+    secondsPerStretch: 5,
+    restSecondsBetweenStretches: 3,
+    positionDetectors: ['LumbarCamelSeated', 'LumbarCatSeated'],
+  ),
+  ```
+
+- **Section title with a custom sound**: high knees under a "Cardio" block. `sectionTitleSoundKey` takes an asset key, URL or file path and plays before the exercise intro.
+
+  ```dart
+  displayContext: const SMKitExerciseDisplayContext(
+    sectionTitle: 'Cardio',
+    group: SMKitExerciseDisplayGroup(
+      id: 'cardio',
+      kind: SMKitExerciseDisplayGroupKind.block,
+      number: 1,
+    ),
+    sectionTitleSoundKey: 'https://example.com/cardio-title.mp3',
+  ),
+  ```
+
+- **Instruction-rep timing and pace**: squats with `instructionRepTiming`, `paceLimitEnabled: true` and `positionExitVocalsEnabled: false`.
+
+## Live Controls and Events
+
+The demo handles every workout event: `exerciseWillStart`, `exerciseData`, `workoutPreparationDidFinish` and `workoutPreparationDidCancel` are recorded in the Event Log screen, along with live-control results. When a summary arrives, the log also lists its `modifications`: swaps, added rests and other changes made during the workout, with `type`, `source`, `sourceDetector`, `appliedDetector`, `pairedDetector`, `restSeconds` and `timestamp`.
+
+On iOS, turn on UI Settings › Emit diagnostics (iOS) to log each native diagnostic with its name, category, severity, message, timestamp, `errorDomain`, `errorCode` and `properties`. Recovered sessions are logged with `sessionResult` and, on iOS, `workoutSummary`.
+
+The SDK screen covers the app during a workout, so UI Settings › Live Controls picks an action that runs a few seconds after each exercise starts:
+
+| Action | API | Platforms |
+|--------|-----|-----------|
+| Log live progress | `getLiveWorkoutProgress()` | Both |
+| Pause, then resume | `pauseSdk()`, `resumeSdk()` | Both |
+| Skip / restart exercise | `skipCurrentExercise()`, `restartCurrentExercise()` | Both |
+| Add 2 reps to later sets | `updateFutureExerciseTargets(...)` | Android |
+| Insert 30 s rest, styled pause | `getWorkoutCommandToken()`, `performWorkoutCommand(...)` | iOS |
+
+```dart
+final token = await smkit.getWorkoutCommandToken();
+if (token != null) {
+  final result = await smkit.performWorkoutCommand(
+    SMKitWorkoutCommand.insertRest(30),
+    token: token,
+  );
+  if (!result.accepted) debugPrint(result.reason);
+}
+```
+
+## SDK Tools
+
+The SDK Tools screen covers calls that do not start a workout:
+
+- `loadInstructionVideo` and `loadInstructionVideoThumbnail` for a detector.
+- `predownloadWorkoutAssets` for a list of detectors, optionally with Mobility Flow assets.
+- `consumeRecoveredSessionSummaries`: sessions the SDK saved after a fault or after the app was killed mid-workout. The demo also checks right after `configure`; each session is returned only once.
+- `mergeAdaptiveRomPilotCache`: the demo saves each exercise's `adaptiveRom` snapshot from workout summaries to a local file and restores them into the SDK on request.
+- `getCustomerAssetPath` (local copy only) and `requestCustomerAssetPath`.
+- `setVideo` (iOS): run a session on a recorded video instead of the camera.
+
 ## Platform Notes
 
-- iOS-only: `pauseSdk`, `resumeSdk`, `getSupportedMovements`, `getExerciseType`, `includesHighlights`, exercise `useWideAngleCamera`, watch companion, heart-rate rest, and accurate pose estimation controls.
-- Android-only: `clearAdaptiveRomCache`, `androidConfigString`, `poseModelChoice` during `configure`, and pause buttons `rest` / `switchExercise`.
+- iOS-only: `setExcludedFeedbacks`, `setVideo`, `getWorkoutCommandToken`, `performWorkoutCommand`, `includesHighlights`, `includesObjectDetectionFeedbacks`, `modelDownloadPolicy`, `enablePerExerciseBodyCalibration`, `showAllSkeletonKeypoints`, body-calibration object detection, object-detection feedbacks, rowing phone calibration, diagnostics, recovered `workoutSummary`, exercise `useWideAngleCamera`, watch companion, heart-rate rest, and accurate pose estimation controls.
+- Android-only: `clearAdaptiveRomCache`, `updateFutureExerciseTargets`, `androidConfigString`, `poseModelChoice` during `configure`, and pause buttons `rest` / `switchExercise`.
 - iOS-focused: audio mixing and external audio control depend on the native iOS audio session behavior.
-- Cross-platform: phone calibration, session language, core pause buttons, instruction video config, skeleton styling, adaptive ROM, guidance mode, countdown audio, rep audio, stretch sets, phone movement prevention, variation mismatch feedback, button tutorial, and workout continuation.
+- Cross-platform: `pauseSdk`, `resumeSdk`, live progress, skip and restart, `getSupportedMovements`, `getExerciseType`, Mobility Flow, recovered sessions, phone calibration, session language, core pause buttons, instruction video config, skeleton styling, adaptive ROM, guidance mode, countdown audio, rep audio, stretch sets, phone movement prevention, variation mismatch feedback, button tutorial, and workout continuation.
 
 Having issues? [Contact us](mailto:support@sency.ai) and let us know what the problem is.
