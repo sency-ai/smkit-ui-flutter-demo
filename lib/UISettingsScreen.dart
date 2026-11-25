@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
 
 import 'demo_settings.dart';
+import 'live_controls.dart';
 
 class UISettingsScreen extends StatefulWidget {
   final SmkitUiFlutterPlugin plugin;
@@ -73,6 +75,35 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
               settings.showDebugBoundingBox,
               (value) => _changed(() => settings.showDebugBoundingBox = value),
             ),
+            _section('Configure (applies on Reconfigure SDK)'),
+            _dropdownTile<SmKitPoseModelChoice>(
+              Platform.isIOS ? 'Pose model (Android only)' : 'Pose model',
+              settings.poseModelChoice,
+              SmKitPoseModelChoice.values,
+              (value) => _changed(
+                () => settings.poseModelChoice = value,
+                apply: false,
+              ),
+            ),
+            if (Platform.isIOS) ...[
+              _dropdownTile<SMKitModelDownloadPolicy>(
+                'Model download policy',
+                settings.modelDownloadPolicy,
+                SMKitModelDownloadPolicy.values,
+                (value) => _changed(
+                  () => settings.modelDownloadPolicy = value,
+                  apply: false,
+                ),
+              ),
+              _switchTile(
+                'Object detection feedbacks',
+                settings.objectDetectionFeedbacks,
+                (value) => _changed(
+                  () => settings.objectDetectionFeedbacks = value,
+                  apply: false,
+                ),
+              ),
+            ],
             _section('Appearance'),
             _dropdownTile<SMKitColorTheme>(
               'Color theme',
@@ -438,6 +469,124 @@ class _UISettingsScreenState extends State<UISettingsScreen> {
               settings.intentVoiceFeedbackEnabled,
               (value) =>
                   _changed(() => settings.intentVoiceFeedbackEnabled = value),
+            ),
+            _section('Mobility Flow and Holds'),
+            const Text(
+              'On Android, voice, hold sound and position-exit vocals apply '
+              'after you reconfigure the SDK.',
+            ),
+            _dropdownTile(
+              'Mobility flow voice',
+              settings.mobilityFlowVoice,
+              DemoSettings.voiceOptions,
+              (value) => _changed(() => settings.mobilityFlowVoice = value),
+            ),
+            _dropdownTile(
+              'Hold indicator style',
+              settings.mobilityFlowHoldIndicatorStyle,
+              MobilityFlowHoldIndicatorStyle.values,
+              (value) => _changed(
+                () => settings.mobilityFlowHoldIndicatorStyle = value,
+              ),
+            ),
+            _switchTile(
+              'Sound during holds',
+              settings.holdPositionSoundEnabled,
+              (value) =>
+                  _changed(() => settings.holdPositionSoundEnabled = value),
+            ),
+            _switchTile(
+              'Vocals when leaving position',
+              settings.positionExitVocalsEnabled,
+              (value) =>
+                  _changed(() => settings.positionExitVocalsEnabled = value),
+            ),
+            if (Platform.isIOS) ...[
+              _section('iOS Only'),
+              _switchTile(
+                'Body calibration before each exercise',
+                settings.enablePerExerciseBodyCalibration,
+                (value) => _changed(
+                  () => settings.enablePerExerciseBodyCalibration = value,
+                ),
+              ),
+              _switchTile(
+                'Show all skeleton keypoints',
+                settings.showAllSkeletonKeypoints,
+                (value) =>
+                    _changed(() => settings.showAllSkeletonKeypoints = value),
+              ),
+              _switchTile(
+                'Rowing phone calibration screen',
+                settings.showRowingPhoneCalibration,
+                (value) =>
+                    _changed(() => settings.showRowingPhoneCalibration = value),
+              ),
+              _switchTile(
+                'Body calibration object detection',
+                settings.enableBodyCalibrationObjectDetection,
+                (value) => _changed(
+                  () => settings.enableBodyCalibrationObjectDetection = value,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Required object classes (comma-separated)',
+                    helperText:
+                        'Body calibration waits until it sees each class',
+                    border: OutlineInputBorder(),
+                  ),
+                  controller: TextEditingController(
+                    text: settings.bodyCalibrationRequiredObjectClasses,
+                  ),
+                  onSubmitted: (value) => _changed(
+                    () => settings.bodyCalibrationRequiredObjectClasses = value,
+                  ),
+                ),
+              ),
+              TextField(
+                decoration: const InputDecoration(
+                  labelText: 'Excluded feedbacks (comma-separated)',
+                  hintText: 'SquatHipCreaseDepth, PushupKneesOnFloor',
+                  border: OutlineInputBorder(),
+                ),
+                controller: TextEditingController(
+                  text: settings.excludedFeedbacks,
+                ),
+                onSubmitted: (value) =>
+                    _changed(() => settings.excludedFeedbacks = value),
+              ),
+            ],
+            _section('Live Controls'),
+            const Text(
+              'The SDK screen covers the app during a workout, so the demo '
+              'runs the selected action a few seconds after each exercise '
+              'starts. Results appear in the Event Log.',
+            ),
+            _dropdownTile(
+              'Action',
+              settings.liveControlAction,
+              LiveControlAction.values
+                  .where((action) => action.isAvailable)
+                  .toList(),
+              (value) => _changed(
+                () => settings.liveControlAction = value,
+                apply: false,
+              ),
+            ),
+            _stepperTile(
+              'Delay after exercise starts',
+              settings.liveControlDelaySeconds,
+              3,
+              60,
+              1,
+              's',
+              (value) => _changed(
+                () => settings.liveControlDelaySeconds = value,
+                apply: false,
+              ),
             ),
             _section('Pause Buttons'),
             ...SMKitPauseType.values.map(

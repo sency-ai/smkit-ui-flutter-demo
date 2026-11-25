@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_smkit_ui/flutter_smkit_ui.dart';
+
+import 'live_controls.dart';
 
 enum DemoInstructionVideoMode { defaultMode, mediumCycle }
 
@@ -9,6 +13,18 @@ enum DemoCounterPreference { defaultBased, perfectOnly }
 
 class DemoSettings {
   bool configureHighlightsOnNextLaunch = false;
+
+  // Read by configure, so they apply on the next launch or Reconfigure SDK.
+  /// Android only; iOS accepts it and ignores it.
+  SmKitPoseModelChoice poseModelChoice = SmKitPoseModelChoice.adaptiveChoice;
+
+  /// iOS only: Android rejects non-default values.
+  SMKitModelDownloadPolicy modelDownloadPolicy =
+      SMKitModelDownloadPolicy.waitForRemoteModelsThenFallback;
+
+  /// iOS only: drives configure's includesObjectDetectionFeedbacks and
+  /// SMKitConfig.enableObjectDetectionFeedbacks together.
+  bool objectDetectionFeedbacks = false;
   bool showPhoneCalibration = true;
   bool enableWorkoutContinuation = false;
   bool showDebugBoundingBox = false;
@@ -74,6 +90,28 @@ class DemoSettings {
   bool playTargetRepsCompletionVoice = false;
   bool intentVoiceFeedbackEnabled = false;
   String androidConfigString = '';
+
+  // Mobility flow and holds.
+  SMKitVoice mobilityFlowVoice = SMKitVoice.female1;
+  MobilityFlowHoldIndicatorStyle mobilityFlowHoldIndicatorStyle =
+      MobilityFlowHoldIndicatorStyle.classic;
+  bool holdPositionSoundEnabled = false;
+  bool positionExitVocalsEnabled = true;
+
+  // iOS only: Android rejects setConfig when these keys are present.
+  bool enablePerExerciseBodyCalibration = false;
+  bool showAllSkeletonKeypoints = false;
+  bool showRowingPhoneCalibration = false;
+  bool enableBodyCalibrationObjectDetection = false;
+
+  /// iOS only: comma-separated object classes body calibration must see.
+  String bodyCalibrationRequiredObjectClasses = '';
+
+  /// iOS only: comma-separated feedback names the SDK should not detect.
+  String excludedFeedbacks = '';
+
+  LiveControlAction liveControlAction = LiveControlAction.none;
+  int liveControlDelaySeconds = 8;
 
   List<SMKitPauseType> allowedPauseTypes = [
     SMKitPauseType.quit,
@@ -158,7 +196,35 @@ class DemoSettings {
     exerciseSummaryTimingMetrics: exerciseSummaryTimingMetrics,
     includeAssessmentInsights: includeAssessmentInsights,
     showDebugBoundingBox: showDebugBoundingBox,
+    mobilityFlowVoice: mobilityFlowVoice,
+    mobilityFlowHoldIndicatorStyle: mobilityFlowHoldIndicatorStyle,
+    holdPositionSoundEnabled: holdPositionSoundEnabled,
+    positionExitVocalsEnabled: positionExitVocalsEnabled,
+    enablePerExerciseBodyCalibration: Platform.isIOS
+        ? enablePerExerciseBodyCalibration
+        : null,
+    showAllSkeletonKeypoints: Platform.isIOS ? showAllSkeletonKeypoints : null,
+    showRowingPhoneCalibration: Platform.isIOS
+        ? showRowingPhoneCalibration
+        : null,
+    enableBodyCalibrationObjectDetection: Platform.isIOS
+        ? enableBodyCalibrationObjectDetection
+        : null,
+    bodyCalibrationRequiredObjectClasses: Platform.isIOS
+        ? _commaList(bodyCalibrationRequiredObjectClasses)
+        : null,
+    enableObjectDetectionFeedbacks: Platform.isIOS
+        ? objectDetectionFeedbacks
+        : null,
   );
+
+  static List<String> _commaList(String value) => value
+      .split(',')
+      .map((name) => name.trim())
+      .where((name) => name.isNotEmpty)
+      .toList();
+
+  List<String> get excludedFeedbackList => _commaList(excludedFeedbacks);
 
   Future<void> applyTo(SmkitUiFlutterPlugin plugin) async {
     await plugin.setConfig(config: smkitConfig);
@@ -167,6 +233,9 @@ class DemoSettings {
           ? const ['PushupKneesOnFloor']
           : const [],
     );
+    if (Platform.isIOS) {
+      await plugin.setExcludedFeedbacks(feedbacks: excludedFeedbackList);
+    }
     await plugin.setSessionLanguage(language: sessionLanguage);
     await plugin.setPhoneCalibrationLanguage(
       language: phoneCalibrationLanguage,
@@ -187,6 +256,8 @@ class DemoSettings {
 
 extension DemoDisplayNames on Object {
   String get displayName {
+    final self = this;
+    if (self is LiveControlAction) return self.label;
     final name = switch (this) {
       SMKitColorTheme value => value.name,
       SkeletonPreset value => value.name,
@@ -207,6 +278,10 @@ extension DemoDisplayNames on Object {
       SMKitPauseType value => value.name,
       SMKitFeedbackFrequency value => value.name,
       SMKitVoice value => value == SMKitVoice.male1 ? 'Male 1' : 'Female 1',
+      MobilityFlowHoldIndicatorStyle value => value.name,
+      SmKitPoseModelChoice value => value.name,
+      SMKitModelDownloadPolicy value => value.name,
+      SMKitRowingFeedbackLevel value => value.name,
       _ => toString(),
     };
     return name
