@@ -47,6 +47,7 @@ Enter your auth key in the app or set `API_PUBLIC_KEY` in `.env`. The `.env` fil
 
 - [Android Setup](docs/android-setup.md)
 - [iOS Setup](docs/ios-setup.md)
+- [Voices and section title vocals](docs/custom-vocals.md)
 
 The native setup must include camera permissions and the platform-specific dependency setup described in those guides.
 
