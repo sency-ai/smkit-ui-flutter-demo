@@ -42,6 +42,25 @@ await smkit.configure(key: apiKey);
 In this demo, open **UI Settings** and use **Feedback voice** and
 **Mobility flow voice**, then tap **Reconfigure SDK**.
 
+### English voices recorded
+
+Sency has recorded these English voices. The SDK currently selects only
+`male_1` and `female_1` (`SMKitVoice.male1` and `SMKitVoice.female1`); the
+others are not selectable yet.
+
+| Main (coaching) | Mobility Flow |
+|---|---|
+| Male_1 | Male_1
+| Male_2 | Male_2 |
+| Male_3 | Male_3 |
+| Male_4 | |
+| Male_5 | |
+| Female_1 | Female_1 |
+| Female_2 | Female_2 |
+| Female_3 | Female_3 |
+| Female_4 | |
+| Female_5 | |
+
 ## Announce section titles
 
 Give an exercise a section title through `displayContext`. The SDK shows the
