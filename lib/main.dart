@@ -401,6 +401,16 @@ class _MyAppState extends State<MyApp> {
                                     guidanceSuggestion: true,
                                   ),
                                 ),
+                                FilledButton.icon(
+                                  icon: const Icon(Icons.repeat),
+                                  label: const Text(
+                                    'Rounds (warm-up + 2 rounds)',
+                                  ),
+                                  onPressed: () => _startPreset(
+                                    'Rounds',
+                                    DemoPresets.rounds(),
+                                  ),
+                                ),
                                 const SizedBox(height: 8),
                                 ElevatedButton.icon(
                                   icon: const Icon(Icons.tune),
@@ -968,7 +978,10 @@ class _MyAppState extends State<MyApp> {
   Future<void> _prepareBeforeStart(String name, SMKitWorkout workout) async {
     setState(() => _preparingPreset = name);
     try {
-      final ready = await _smkitUiFlutterPlugin.prepareWorkout(workout);
+      // A first download can take ~25 s; on stage, start after 15 s anyway.
+      final ready = await _smkitUiFlutterPlugin
+          .prepareWorkout(workout)
+          .timeout(const Duration(seconds: 15));
       DemoEventLog.instance.add('prepareWorkout($name)', 'returned $ready');
     } catch (error) {
       // Start anyway; the session downloads what it still needs.
